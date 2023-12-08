@@ -14,12 +14,14 @@ class Program
         public static string EQUIP = "EQUIP";
         public static string ITEMS = "ITEMS";
         public static string TREASURE = "TREASURE";
+        public static string LEVELUP = "LEVELUP";
     }
     static Dictionary<string, bool> modules = new Dictionary<string, bool>() {
         {MODULES.INITIALIZE,false },
         {MODULES.EQUIP,false },
         {MODULES.ITEMS,false },
         {MODULES.TREASURE,false },
+        {MODULES.LEVELUP,false },
     };
     static string base_path = @"romfs\Data\StreamingAssets\data_tbl\";
     static string dest_path = @"outout\romfs\Data\StreamingAssets\data_tbl\";
@@ -72,6 +74,89 @@ class Program
             using (var stream_o = File.OpenWrite(destination))
             {
                 reader.WriteStream(stream_o);
+            }
+        };
+
+    }
+    public static void RandomizeCharacterLevelUp()
+    {
+        //levelup_mario.tbl
+        var skills = new List<int>();
+        ReadCharacterLevelUp("mario", skills);
+        ReadCharacterLevelUp("mallow", skills);
+        ReadCharacterLevelUp("geno", skills);
+        ReadCharacterLevelUp("koopa", skills);
+        ReadCharacterLevelUp("peach", skills);
+        skills = skills.Distinct().ToList();
+        for (var i = 0; i < 20; i++)
+            skills.Add(0);
+        RandomizeCharacterLevelUp("mario", skills);
+        RandomizeCharacterLevelUp("mallow", skills);
+        RandomizeCharacterLevelUp("geno", skills);
+        RandomizeCharacterLevelUp("koopa", skills);
+        RandomizeCharacterLevelUp("peach", skills);
+    }
+    public static void RandomizeCharacterLevelUp(string character, List<int> learnableSkill)
+    {
+        var file = "/levelup_" + character;
+        var path = base_path + file + ".tbl";
+        var destination = dest_path + file + ".tbl";
+
+        using (var stream = File.OpenRead(path))
+        {
+            var reader = new NRBFReader(stream);
+            var result = ((Object[])reader.Parse()).Select(x => (BinaryObject)x).ToArray();
+            Random r = new Random();
+
+            if (modules[MODULES.LEVELUP])
+            {
+
+                Console.WriteLine("Randomizing players level up for " + character);
+                foreach (var item in result.Skip(1))
+                {
+                    item["_hp"] = (int)((int)item["_hp"] * (r.NextDouble() + 0.5));
+                    item["_hp_bonus"] = (int)((int)item["_hp_bonus"] * (r.NextDouble() + 0.5));
+                    item["_attack"] = (int)((int)item["_attack"] * (r.NextDouble() + 0.5));
+                    item["_attack_bonus"] = (int)((int)item["_attack_bonus"] * (r.NextDouble() + 0.5));
+                    item["_magic_attack"] = (int)((int)item["_magic_attack"] * (r.NextDouble() + 0.5));
+                    item["_magic_attack_bonus"] = (int)((int)item["_magic_attack_bonus"] * (r.NextDouble() + 0.5));
+                    item["_defence"] = (int)((int)item["_defence"] * (r.NextDouble() + 0.5));
+                    item["_defence_bonus"] = (int)((int)item["_defence_bonus"] * (r.NextDouble() + 0.5));
+                    item["_magic_defence"] = (int)((int)item["_magic_defence"] * (r.NextDouble() + 0.5));
+                    item["_magic_defence_bonus"] = (int)((int)item["_magic_defence_bonus"] * (r.NextDouble() + 0.5));
+                    //Crash the start menu if enabled? Will find a way one day...
+                    //item["_learn_skill"] = learnableSkill.OrderBy(x => r.Next()).First();
+                }
+            }
+
+            System.IO.File.Delete(destination);
+            using (var stream_o = File.OpenWrite(destination))
+            {
+                reader.WriteStream(stream_o);
+            }
+        };
+
+    }
+    public static void ReadCharacterLevelUp(string character, List<int> learnableSkill)
+    {
+        var file = "/levelup_" + character;
+        var path = base_path + file + ".tbl";
+        var destination = dest_path + file + ".tbl";
+
+        using (var stream = File.OpenRead(path))
+        {
+            var reader = new NRBFReader(stream);
+            var result = ((Object[])reader.Parse()).Select(x => (BinaryObject)x).ToArray();
+            Random r = new Random();
+
+            if (modules[MODULES.LEVELUP])
+            {
+
+                Console.WriteLine("Randomizing players level up for " + character);
+                foreach (var item in result.Skip(1))
+                {
+                    learnableSkill.Add((int)item["_learn_skill"]);
+                }
             }
         };
 
@@ -293,6 +378,7 @@ class Program
         RandomizeItems();
         RandomizeCharacterInitialStats();
         RandomizeTreasure();
+        RandomizeCharacterLevelUp();
         //player_action
         //encounter
         //shop
