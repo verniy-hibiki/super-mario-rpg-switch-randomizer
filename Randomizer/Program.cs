@@ -15,6 +15,7 @@ class Program
         public static string ITEMS = "ITEMS";
         public static string TREASURE = "TREASURE";
         public static string LEVELUP = "LEVELUP";
+        public static string ENCOUNTER = "ENCOUNTER";
     }
     static Dictionary<string, bool> modules = new Dictionary<string, bool>() {
         {MODULES.INITIALIZE,false },
@@ -22,6 +23,7 @@ class Program
         {MODULES.ITEMS,false },
         {MODULES.TREASURE,false },
         {MODULES.LEVELUP,false },
+        {MODULES.ENCOUNTER,false },
     };
     static string base_path = @"romfs\Data\StreamingAssets\data_tbl\";
     static string dest_path = @"outout\romfs\Data\StreamingAssets\data_tbl\";
@@ -35,6 +37,45 @@ class Program
         new List<int>(),
         new List<int>()
     };
+    public static void RandomizeEncounter()
+    {
+        var file = "encounter_pattern";
+        var path = base_path + file + ".tbl";
+        var destination = dest_path + file + ".tbl";
+
+        using (var stream = File.OpenRead(path))
+        {
+            var reader = new NRBFReader(stream);
+            var result = ((Object[])reader.Parse()).Select(x => (BinaryObject)x).ToArray();
+            Random r = new Random();
+
+
+            if (modules[MODULES.ENCOUNTER])
+            {
+                var all_ids = result.SelectMany(x => ((int[])x["_monster_id"])).Where(x => x > 1001).Distinct().ToList();
+
+                Console.WriteLine("Randomizing encounters");
+                foreach (var item in result)
+                {
+                    var lst = (int[])item["_monster_id"];
+                    for (var i = 0; i < lst.Length; i++)
+                    {
+                        if (lst[i] > 0)
+                        {
+                            lst[i] = all_ids.Where(x => x >= lst[i]-40 && x <= lst[i] + 40).OrderBy(x => r.Next()).First();
+                        }
+                    }
+                }
+            }
+
+            System.IO.File.Delete(destination);
+            using (var stream_o = File.OpenWrite(destination))
+            {
+                reader.WriteStream(stream_o);
+            }
+        };
+
+    }
     public static void RandomizeCharacterInitialStats()
     {
         var file = "player_initialize";
@@ -379,6 +420,7 @@ class Program
         RandomizeCharacterInitialStats();
         RandomizeTreasure();
         RandomizeCharacterLevelUp();
+        RandomizeEncounter();
         //player_action
         //encounter
         //shop

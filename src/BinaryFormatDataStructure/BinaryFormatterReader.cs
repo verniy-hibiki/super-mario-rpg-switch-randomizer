@@ -143,6 +143,10 @@ namespace BinaryFormatDataStructure
                 {
                     writer.Write((int)obj);
                 }
+                else if (obj is String)
+                {
+                    writer.Write((String)obj);
+                }
                 else if (obj is Single)
                 {
                     writer.Write((Single)obj);
@@ -167,6 +171,21 @@ namespace BinaryFormatDataStructure
                     for (var i = 0; i < i_arr.Length; i++)
                     {
                         writer.Write(i_arr[i]);
+                    }
+                }
+                else if (obj is Single[] si_arr)
+                {
+                    writer.Write((byte)RecordType.ArraySinglePrimitive);
+                    serializedObjects[findId(si_arr)] = si_arr;
+                    var record = new ArraySinglePrimitiveRecord()
+                    {
+                        ArrayInfo = new ArrayInfo { Length = si_arr.Length, ObjectId = findId(si_arr) },
+                        PrimitiveType = PrimitiveType.Single
+                    };
+                    record.Write(writer);
+                    for (var i = 0; i < si_arr.Length; i++)
+                    {
+                        writer.Write(si_arr[i]);
                     }
                 }
                 else
