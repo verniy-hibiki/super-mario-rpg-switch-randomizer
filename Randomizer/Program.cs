@@ -8,9 +8,31 @@ using BinaryFormatDataStructure;
 
 class Program
 {
-    static string base_path = @"C:\Users\moysk\AppData\Roaming\yuzu\dump\0100BC0018138000\romfs\Data\StreamingAssets\data_tbl\";
-    static string dest_path = @"C:\Users\moysk\AppData\Roaming\yuzu\load\0100BC0018138000\m1\romfs\Data\StreamingAssets\data_tbl";
+    static class MODULES
+    {
+        public static string INITIALIZE = "INITIALIZE";
+        public static string EQUIP = "EQUIP";
+        public static string ITEMS = "ITEMS";
+        public static string TREASURE = "TREASURE";
+    }
+    static Dictionary<string, bool> modules = new Dictionary<string, bool>() {
+        {MODULES.INITIALIZE,false },
+        {MODULES.EQUIP,false },
+        {MODULES.ITEMS,false },
+        {MODULES.TREASURE,false },
+    };
+    static string base_path = @"romfs\Data\StreamingAssets\data_tbl\";
+    static string dest_path = @"outout\romfs\Data\StreamingAssets\data_tbl";
     private static IEnumerable<int> all_items = new List<int>();
+    private static List<int>[] all_equipable = new List<int>[6]
+    {
+        new List<int>(),
+        new List<int>(),
+        new List<int>(),
+        new List<int>(),
+        new List<int>(),
+        new List<int>()
+    };
     public static void RandomizeCharacterInitialStats()
     {
         var file = "player_initialize";
@@ -23,26 +45,29 @@ class Program
             var result = ((Object[])reader.Parse()).Select(x => (BinaryObject)x).ToArray();
             Random r = new Random();
 
-            foreach (var item in result)
+            if (modules[MODULES.INITIALIZE])
             {
-                item["_hp"] = (int)((int)item["_hp"] * (r.NextDouble() + 0.5));
-                item["_attack"] = (int)((int)item["_attack"] * (r.NextDouble() + 0.5));
-                item["_magic_attack"] = (int)((int)item["_magic_attack"] * (r.NextDouble() + 0.5));
-                item["_defence"] = (int)((int)item["_defence"] * (r.NextDouble() + 0.5));
-                item["_magic_defence"] = (int)((int)item["_magic_defence"] * (r.NextDouble() + 0.5));
-                item["_speeed"] = (int)((int)item["_speeed"] * (r.NextDouble() + 0.5));
-                var skills = (int[])item["_learned_skill_id"];
+                Console.WriteLine("Randomizing players initial stats");
+                foreach (var item in result)
+                {
+                    item["_hp"] = (int)((int)item["_hp"] * (r.NextDouble() + 0.5));
+                    item["_attack"] = (int)((int)item["_attack"] * (r.NextDouble() + 0.5));
+                    item["_magic_attack"] = (int)((int)item["_magic_attack"] * (r.NextDouble() + 0.5));
+                    item["_defence"] = (int)((int)item["_defence"] * (r.NextDouble() + 0.5));
+                    item["_magic_defence"] = (int)((int)item["_magic_defence"] * (r.NextDouble() + 0.5));
+                    item["_speeed"] = (int)((int)item["_speeed"] * (r.NextDouble() + 0.5));
+                    var skills = (int[])item["_learned_skill_id"];
 
-                item["_armor"] = (int)(new int[] { 0, 0, 0, 0, 59 }.OrderBy(x => r.Next()).First());
-                item["_weapon"] = (int)(new int[] { 0, 0, 0, 0, 27 }.OrderBy(x => r.Next()).First());
+                    item["_armor"] = (int)(new int[] { 0, 0, 0, 0, 59 }.OrderBy(x => r.Next()).First());
+                    item["_weapon"] = (int)(new int[] { 0, 0, 0, 0, 27 }.OrderBy(x => r.Next()).First());
 
-                var learnableSkills = new int[] { 0, 103, 109, 111, 115, 120, 124, 125 };
-                var new_skiils = learnableSkills.OrderBy(x => r.Next()).Take(2).ToList();
-                skills[0] = new_skiils[0];
-                skills[1] = new_skiils[1];
+                    var learnableSkills = new int[] { 0, 103, 109, 111, 115, 120, 124, 125 };
+                    var new_skiils = learnableSkills.OrderBy(x => r.Next()).Take(2).ToList();
+                    skills[0] = new_skiils[0];
+                    skills[1] = new_skiils[1];
+                }
             }
 
-            Console.WriteLine(result);
             System.IO.File.Delete(destination);
             using (var stream_o = File.OpenWrite(destination))
             {
@@ -64,40 +89,68 @@ class Program
             Random r = new Random();
             var items = new List<int>();
             all_items = items;
+            if (modules[MODULES.EQUIP])
+            {
+                Console.WriteLine("Randomizing who can equip items");
+            }
+            if (modules[MODULES.ITEMS])
+            {
+                Console.WriteLine("Randomizing items stats");
+            }
             foreach (var item in result)
             {
                 items.Add((int)item["_item_id"]);
-                //_can_equip_mario,_can_equip_mallow,_can_equip_geno,_can_equip_kupper,_can_equip_peach
-                var _can_equip_mario = (bool)item["_can_equip_mario"];
-                var _can_equip_mallow = (bool)item["_can_equip_mallow"];
-                var _can_equip_geno = (bool)item["_can_equip_geno"];
-                var _can_equip_kupper = (bool)item["_can_equip_kupper"];
-                var _can_equip_peach = (bool)item["_can_equip_peach"];
-                var is_equipable = _can_equip_mario || _can_equip_mallow || _can_equip_geno || _can_equip_kupper || _can_equip_peach;
-                if (is_equipable)
+                if (modules[MODULES.EQUIP])
                 {
-                    var equipable = new bool[] { false, false, false, false, false };
+                    //_can_equip_mario,_can_equip_mallow,_can_equip_geno,_can_equip_kupper,_can_equip_peach
+                    var _can_equip_mario = (bool)item["_can_equip_mario"];
+                    var _can_equip_mallow = (bool)item["_can_equip_mallow"];
+                    var _can_equip_geno = (bool)item["_can_equip_geno"];
+                    var _can_equip_kupper = (bool)item["_can_equip_kupper"];
+                    var _can_equip_peach = (bool)item["_can_equip_peach"];
+                    var is_equipable = _can_equip_mario || _can_equip_mallow || _can_equip_geno || _can_equip_kupper || _can_equip_peach;
+                    if (is_equipable)
+                    {
+                        var equipable = new bool[] { false, false, false, false, false };
 
-                    while (!equipable.Any())
-                        equipable = equipable.Select(x => r.NextDouble() > 0.5).ToArray();
+                        while (!equipable.Any())
+                            equipable = equipable.Select(x => r.NextDouble() > 0.5).ToArray();
 
-                    item["_can_equip_mario"] = (bool)equipable[0];
-                    item["_can_equip_mallow"] = (bool)equipable[1];
-                    item["_can_equip_geno"] = (bool)equipable[2];
-                    item["_can_equip_kupper"] = (bool)equipable[3];
-                    item["_can_equip_peach"] = (bool)equipable[4];
+                        item["_can_equip_mario"] = (bool)equipable[0];
+
+                        item["_can_equip_mallow"] = (bool)equipable[1];
+
+                        item["_can_equip_geno"] = (bool)equipable[2];
+
+                        item["_can_equip_kupper"] = (bool)equipable[3];
+
+                        item["_can_equip_peach"] = (bool)equipable[4];
+
+                    }
                 }
-                item["_buy_price"] = (int)((int)item["_buy_price"] * (r.NextDouble() + 0.5));
-                item["_attack"] = (int)((int)item["_attack"] * (r.NextDouble() + 0.5));
-                item["_magic_attack"] = (int)((int)item["_magic_attack"] * (r.NextDouble() + 0.5));
-                item["_defense"] = (int)((int)item["_defense"] * (r.NextDouble() + 0.5));
-                item["_magic_defense"] = (int)((int)item["_magic_defense"] * (r.NextDouble() + 0.5));
+                if (modules[MODULES.ITEMS])
+                {
+                    item["_buy_price"] = (int)((int)item["_buy_price"] * (r.NextDouble() + 0.5));
+                    item["_attack"] = (int)((int)item["_attack"] * (r.NextDouble() + 0.5));
+                    item["_magic_attack"] = (int)((int)item["_magic_attack"] * (r.NextDouble() + 0.5));
+                    item["_defense"] = (int)((int)item["_defense"] * (r.NextDouble() + 0.5));
+                    item["_magic_defense"] = (int)((int)item["_magic_defense"] * (r.NextDouble() + 0.5));
 
-                item["_possession_limit_easy"] = Math.Max(2, (int)((int)item["_possession_limit_easy"] * (r.NextDouble() + 0.5)));
-                item["_possession_limit_normal"] = Math.Max(2, (int)((int)item["_possession_limit_normal"] * (r.NextDouble() + 0.5)));
+                    item["_possession_limit_easy"] = Math.Max(2, (int)((int)item["_possession_limit_easy"] * (r.NextDouble() + 0.5)));
+                    item["_possession_limit_normal"] = Math.Max(2, (int)((int)item["_possession_limit_normal"] * (r.NextDouble() + 0.5)));
+                }
+                if ((bool)item["_can_equip_mario"])
+                    all_equipable[1].Add((int)item["_item_id"]);
+                if ((bool)item["_can_equip_mario"])
+                    all_equipable[2].Add((int)item["_item_id"]);
+                if ((bool)item["_can_equip_mario"])
+                    all_equipable[3].Add((int)item["_item_id"]);
+                if ((bool)item["_can_equip_mario"])
+                    all_equipable[4].Add((int)item["_item_id"]);
+                if ((bool)item["_can_equip_mario"])
+                    all_equipable[5].Add((int)item["_item_id"]);
             }
 
-            Console.WriteLine(result);
             System.IO.File.Delete(destination);
             using (var stream_o = File.OpenWrite(destination))
             {
@@ -126,18 +179,22 @@ class Program
             var possible_6_value = result.Where(x => (int)x["_treasure_type"] == 6).Select(x => (int)x["_treasure_value"]).Distinct();
             var possible_7_value = result.Where(x => (int)x["_treasure_type"] == 7).Select(x => (int)x["_treasure_value"]).Distinct();
             var possible_new_types = new int[] { 1, 2, 3, 7 };
-            var possible_values = new []{ possible_0_value, all_items, possible_2_value, possible_3_value, possible_4_value, possible_5_value, possible_6_value, possible_7_value };
-            foreach (var item in result)
+            var possible_values = new[] { possible_0_value, all_items, possible_2_value, possible_3_value, possible_4_value, possible_5_value, possible_6_value, possible_7_value };
+            if (modules[MODULES.TREASURE])
             {
-                if (possible_new_types.Contains((int)item["_treasure_type"]))
+                Console.WriteLine("Randomizing treasure boxes");
+                foreach (var item in result)
                 {
-                    //If is not a special chest, then randomize it
-                    item["_treasure_type"] = (int)possible_new_types[r.Next(possible_new_types.Length)];
-                    item["_treasure_value"] = (int)(possible_values[(int)item["_treasure_type"]].OrderBy(x => r.Next()).First());
+                    if (possible_new_types.Contains((int)item["_treasure_type"]))
+                    {
+                        //If is not a special chest, then randomize it
+                        item["_treasure_type"] = (int)possible_new_types[r.Next(possible_new_types.Length)];
+                        item["_treasure_value"] = (int)(possible_values[(int)item["_treasure_type"]].OrderBy(x => r.Next()).First());
+                    }
+                    //_treasure_type
+                    //_treasure_value
+                    //_type {[_treasure_type, 
                 }
-                //_treasure_type
-                //_treasure_value
-                //_type {[_treasure_type, 
             }
             Console.WriteLine(string.Join(",", result.Select(x => x["_treasure_type"]).Distinct()));
             Console.WriteLine(string.Join(",", result.Select(x => x["_treasure_value"]).Distinct()));
@@ -161,10 +218,80 @@ class Program
             }
         };
     }
-    public static void Main()
+    public static void ReadConfig(string[] args)
     {
-        RandomizeCharacterInitialStats();
+        bool needManualConfirm = true;
+        foreach (var key in modules.Keys)
+        {
+            if (args.Contains(key))
+            {
+                needManualConfirm = false;
+                modules[key] = true;
+            }
+        }
+        if (args.Contains("-a"))
+        {
+            needManualConfirm = false;
+            foreach (var key in modules.Keys)
+                modules[key] = true;
+        }
+        if (needManualConfirm)
+        {
+            int cursor = 0;
+
+            do
+            {
+                Console.Clear();
+                Console.WriteLine("Select the modules to randomize");
+                int i = 0;
+                foreach (var key in modules.Keys)
+                {
+                    Console.WriteLine((i == cursor ? ">" : " ") + " [" + (modules[key] ? "x" : " ") + "] " + key);
+                    i++;
+                }
+                Console.WriteLine(" W : Go up       S : Go down     Space: select     Enter: confirm");
+                var pressed = Console.ReadKey(true);
+                if (pressed.Key == ConsoleKey.Spacebar)
+                {
+                    var key = modules.Keys.ElementAt(cursor);
+                    modules[key] = !modules[key];
+                }
+                else if (pressed.Key == ConsoleKey.W)
+                {
+                    if (cursor > 0)
+                        cursor--;
+                }
+                else if (pressed.Key == ConsoleKey.S)
+                {
+                    if (cursor < modules.Count - 1)
+                        cursor++;
+                }
+                else if (pressed.Key == ConsoleKey.Enter)
+                {
+                    needManualConfirm = true;
+                    foreach (var key in modules.Keys)
+                    {
+                        if (modules[key])
+                        {
+                            needManualConfirm = false;
+                        }
+                    }
+                }
+            } while (needManualConfirm);
+        }
+    }
+    public static void Main(string[] args)
+    {
+        ReadConfig(args);
+        if (!System.IO.Directory.Exists(base_path))
+        {
+            Console.WriteLine("Put the dumped romfs in the same folder as the .exe file");
+            return;
+        }
+        System.IO.Directory.CreateDirectory(dest_path);
+
         RandomizeItems();
+        RandomizeCharacterInitialStats();
         RandomizeTreasure();
         //player_action
         //encounter
