@@ -1,0 +1,34 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net452;netstandard2.0</TargetFrameworks>
+    <RootNamespace>BinaryFormatDataStructure</RootNamespace>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <Version>1.0.2</Version>
+    <Authors>Bruce Bowyer-Smyth</Authors>
+    <Company></Company>
+    <Description>Reader for the Binary Format Data Structure (MS-NRBF).
+Source is typically a stream created by BinaryFormatter.</Description>
+    <PackageTags>BinaryFormatter serialization</PackageTags>
+    <PackageReleaseNotes>Fix for arrays of custom objects with a BinaryLibrary record (Dictionaries)</PackageReleaseNotes>
+    <Copyright>Copyright (c) Bruce Bowyer-Smyth and contributors</Copyright>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <PackageProjectUrl>https://github.com/bbowyersmyth/BinaryFormatDataStructure</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/bbowyersmyth/BinaryFormatDataStructure</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <AssemblyVersion>1.0.2.0</AssemblyVersion>
+    <FileVersion>1.0.2.0</FileVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\..\LICENSE">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="NewFolder\" />
+  </ItemGroup>
+
+</Project>
