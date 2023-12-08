@@ -22,7 +22,7 @@ class Program
         {MODULES.TREASURE,false },
     };
     static string base_path = @"romfs\Data\StreamingAssets\data_tbl\";
-    static string dest_path = @"outout\romfs\Data\StreamingAssets\data_tbl";
+    static string dest_path = @"outout\romfs\Data\StreamingAssets\data_tbl\";
     private static IEnumerable<int> all_items = new List<int>();
     private static List<int>[] all_equipable = new List<int>[6]
     {
