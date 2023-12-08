@@ -300,8 +300,8 @@ class Program
 
 
         var file = "stella_item_list";
-        var path = @"C:\Users\moysk\AppData\Roaming\yuzu\dump\0100BC0018138000\romfs\Data\StreamingAssets\data_tbl\" + file + ".tbl";
-        var destination = @"C:\Users\moysk\AppData\Roaming\yuzu\load\0100BC0018138000\m1\romfs\Data\StreamingAssets\data_tbl\" + file + ".tbl";
+        var path = base_path + file + ".tbl";
+        var destination = dest_path + file + ".tbl";
 
         using (var stream = File.OpenRead(path))
         {
