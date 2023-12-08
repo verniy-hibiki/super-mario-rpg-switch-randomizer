@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 
 namespace BinaryFormatDataStructure
 {
@@ -11,6 +12,12 @@ namespace BinaryFormatDataStructure
         {
             LibraryId = reader.ReadInt32();
             LibraryName = reader.ReadString();
+        }
+
+        internal static void Write(BinaryWriter writer, int key, string value)
+        {
+            writer.Write((Int32)key);
+            writer.Write((string)value);
         }
     }
 }

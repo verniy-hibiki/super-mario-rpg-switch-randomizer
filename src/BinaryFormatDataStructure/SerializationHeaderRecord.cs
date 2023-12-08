@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Runtime.Serialization;
 
 namespace BinaryFormatDataStructure
@@ -21,6 +22,14 @@ namespace BinaryFormatDataStructure
             {
                 throw new SerializationException("Invalid NRBF stream");
             }
+        }
+
+        internal void Write(BinaryWriter writer)
+        {
+            writer.Write((Int32)RootId);
+            writer.Write((Int32)HeaderId);
+            writer.Write((Int32)MajorVersion);
+            writer.Write((Int32)MinorVersion);
         }
     }
 }

@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 
 namespace BinaryFormatDataStructure
 {
@@ -11,5 +12,7 @@ namespace BinaryFormatDataStructure
             ArrayInfo = new ArrayInfo();
             ArrayInfo.Read(reader);
         }
+
+
     }
 }

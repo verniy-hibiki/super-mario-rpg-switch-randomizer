@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace BinaryFormatDataStructure
 {
@@ -21,13 +22,17 @@ namespace BinaryFormatDataStructure
 
                 return null;
             }
+            set
+            {
+                _members[memberName] = value;
+            }
         }
 
         public int Count => _members.Count;
 
         public IEnumerable<string> Keys => _members.Keys;
 
-        public IEnumerable<object> Values => throw new NotSupportedException();
+        public IEnumerable<object> Values => _members.Keys.Select(x=>this[x]);
 
         public bool ContainsKey(string memberName)
         {

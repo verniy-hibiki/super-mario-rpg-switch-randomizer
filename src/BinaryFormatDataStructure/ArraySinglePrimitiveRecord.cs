@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 
 namespace BinaryFormatDataStructure
 {
@@ -12,6 +13,16 @@ namespace BinaryFormatDataStructure
             ArrayInfo = new ArrayInfo();
             ArrayInfo.Read(reader);
             PrimitiveType = (PrimitiveType)reader.ReadByte();
+        }
+
+        internal void Write(BinaryWriter writer)
+        {
+            ArrayInfo.Write(writer);
+            writer.Write((byte)PrimitiveType);
+        }
+        public override string ToString()
+        {
+            return $"{ArrayInfo} {PrimitiveType}";
         }
     }
 }

@@ -14,8 +14,10 @@ namespace BinaryFormatDataStructure
         private Dictionary<int, object> _objectTracker = new Dictionary<int, object>();
         private Dictionary<int, string> _libraries = new Dictionary<int, string>();
         private List<DeferredItem> _deferredItems = new List<DeferredItem>();
+        private SerializationHeaderRecord header;
+        private RecordType recordType;
 
-        private NRBFReader(Stream inputStream)
+        public NRBFReader(Stream inputStream)
         {
             _reader = new BinaryReader(inputStream, Encoding.UTF8);
         }
@@ -26,17 +28,198 @@ namespace BinaryFormatDataStructure
             return instance.Parse();
         }
 
-        private object Parse()
+        public void WriteStream(Stream outputStream)
+        {
+            BinaryWriter writer = new BinaryWriter(outputStream);
+            writer.Write((byte)this.recordType);
+            header.Write(writer);
+
+            var serializedObjects = new Dictionary<int, object>();
+            var serializedClasses = new Dictionary<string, int>();
+            int findId(object obj)
+            {
+                var id = _objectTracker.FirstOrDefault(x =>
+                {
+                    if (x.Value == obj) return true;
+                    if (x.Value is ClassWithMembersAndTypesRecord e)
+                    {
+                        if (e.Value == obj) return true;
+                    }
+                    return false;
+                });
+                return id.Key;
+            }
+            void Write(object obj)
+            {
+                if (obj is string[] s_arr)
+                {
+                    writer.Write((byte)RecordType.ArraySingleString);
+                    var id = findId(s_arr);
+                    writer.Write(id);
+                    writer.Write(s_arr.Length);
+                    for (var i = 0; i < s_arr.Length; i++)
+                        Write(s_arr[i]);
+                }
+                else if (obj is object[] o_arr)
+                {
+                    serializedObjects[findId(o_arr)] = o_arr;
+                    writer.Write((byte)RecordType.BinaryArray);
+                    var arr_id = findId(obj);
+                    writer.Write(arr_id);
+                    writer.Write((byte)BinaryArrayType.Single);
+                    writer.Write((Int32)1);
+                    //Foreach rank, if multiple
+                    writer.Write(o_arr.Length);
+                    //Write Binary type
+                    writer.Write((byte)BinaryType.Class);
+                    //Write Class info
+                    BinaryObject b = (BinaryObject)o_arr[0];
+
+                    var classType = new ClassTypeInfo()
+                    {
+                        TypeName = b.TypeName,
+                        LibraryId = _libraries.FirstOrDefault(x => x.Value == b.AssemblyName).Key
+                    };
+                    classType.Write(writer);
+
+                    for (var i = 0; i < o_arr.Length; i++)
+                    {
+                        writer.Write((byte)RecordType.MemberReference);
+                        var id = findId(o_arr[i]);
+                        writer.Write(id);
+                    }
+                    //    Write(o_arr[i]);
+                }
+                else if (obj is ClassWithMembersAndTypesRecord result)
+                {
+                    writer.Write((byte)RecordType.ClassWithMembersAndTypes);
+                    result.Write(writer);
+                    serializedClasses[result.ClassInfo.Name] = result.ClassInfo.ObjectId;
+
+                    WriteMembers(result.Value, result.ClassInfo.MemberNames, result.MemberTypeInfo);
+                }
+                else if (obj is BinaryObject bo)
+                {
+                    var id = findId(bo);
+                    var classType = new ClassTypeInfo()
+                    {
+                        TypeName = bo.TypeName,
+                        LibraryId = _libraries.FirstOrDefault(x => x.Value == bo.AssemblyName).Key
+                    };
+                    if (serializedClasses.ContainsKey(bo.TypeName))
+                    {
+                        writer.Write((byte)RecordType.ClassWithId);
+                        var classWithIdRecord = new ClassWithIdRecord();
+
+                        classWithIdRecord.MetadataId = serializedClasses[bo.TypeName];
+                        classWithIdRecord.ObjectId = id;
+                        classWithIdRecord.Write(writer);
+                        ClassSerializationRecord classRef = (ClassSerializationRecord)_objectTracker[classWithIdRecord.MetadataId];
+                        WriteMembers(bo, classRef.ClassInfo.MemberNames, classRef.MemberTypeInfo);
+
+
+                        //var owner = new BinaryObject()
+                        //{
+                        //    TypeName = objectRef.TypeName,
+                        //    AssemblyName = objectRef.AssemblyName
+                        //};
+                        //if (result.ObjectId != 0)
+                        //{
+                        //    _objectTracker[result.ObjectId] = owner;
+                        //}
+                        //currentObject = owner;
+                        //if (classRef.MemberTypeInfo == null)
+                        //{
+                        //    ReadUntypedMembers(owner, owner.TypeName, classRef.ClassInfo.MemberNames);
+                        //}
+                        //else
+                        //{
+                        //    ReadMembers(owner, classRef.ClassInfo.MemberNames, classRef.MemberTypeInfo);
+                        //}
+                    }
+
+                }
+                else if (obj is Int32)
+                {
+                    writer.Write((int)obj);
+                }
+                else if (obj is Single)
+                {
+                    writer.Write((Single)obj);
+                }
+                else if (obj is Boolean)
+                {
+                    writer.Write((Boolean)obj);
+                }
+                else if (obj == null)
+                {
+                    writer.Write((byte)RecordType.ObjectNull);
+                }
+                else if (obj is Int32[] i_arr)
+                {
+                    writer.Write((byte)RecordType.ArraySinglePrimitive);
+                    serializedObjects[findId(i_arr)] = i_arr;
+                    var record = new ArraySinglePrimitiveRecord() { 
+                        ArrayInfo = new ArrayInfo { Length= i_arr .Length, ObjectId = findId(i_arr)},
+                        PrimitiveType = PrimitiveType.Int32
+                    };
+                    record.Write(writer);
+                    for (var i = 0; i < i_arr.Length; i++)
+                    {
+                        writer.Write(i_arr[i]);
+                    }
+                }
+                else
+                {
+                    var type = obj?.GetType();
+                    Console.WriteLine(type);
+                }
+
+            }
+            void WriteMembers(BinaryObject owner, string[] memberNames, MemberTypeInfo memberTypeInfo)
+            {
+                for (int i = 0; i < memberNames.Length; i++)
+                {
+                    if (memberTypeInfo.BinaryType[i] == BinaryType.Primitive)
+                    {
+                        Write(owner[memberNames[i]]);
+                        //owner.AddMember(memberNames[i], PrimitiveReader.Read((PrimitiveType)memberTypeInfo.AdditionalInfos[i], _reader));
+                    }
+                    else
+                    {
+                        writer.Write((byte)RecordType.MemberReference);
+                        var id = findId(owner[memberNames[i]]);
+                        writer.Write(id);
+                    }
+                }
+            }
+            foreach (var o in _libraries)
+            {
+                writer.Write((byte)RecordType.BinaryLibrary);
+                BinaryLibraryRecord.Write(writer, o.Key, o.Value);
+            }
+           
+            foreach (var o in _objectTracker)
+            {
+                if (!serializedObjects.ContainsKey(o.Key))
+                    Write(o.Value);
+            }
+
+            writer.Write((byte)RecordType.MessageEnd);
+
+        }
+
+        public object Parse()
         {
             // Confirm this is a NRBF stream
-            RecordType recordType = (RecordType)_reader.ReadByte();
+            this.recordType = (RecordType)_reader.ReadByte();
 
             if (recordType != RecordType.SerializedStreamHeader)
             {
                 throw new SerializationException("Invalid NRBF stream");
             }
 
-            var header = new SerializationHeaderRecord();
+            this.header = new SerializationHeaderRecord();
             header.ReadAndValidate(_reader);
 
             // Parse the rest of the stream
@@ -59,7 +242,7 @@ namespace BinaryFormatDataStructure
         {
             object currentObject = null;
             recordType = (RecordType)_reader.ReadByte();
-
+            //Console.WriteLine(recordType);
             switch (recordType)
             {
                 case RecordType.ClassWithId:
@@ -325,6 +508,7 @@ namespace BinaryFormatDataStructure
             }
         }
 
+
         private void ReadUntypedMembers(BinaryObject owner, string className, string[] memberNames)
         {
             if (className == "System.Guid" && memberNames.Length == 11)
@@ -357,6 +541,7 @@ namespace BinaryFormatDataStructure
 
         private object ReadArray(ArraySinglePrimitiveRecord record)
         {
+            Console.WriteLine(record);
             switch (record.PrimitiveType)
             {
                 case PrimitiveType.Boolean:

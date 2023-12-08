@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 
 namespace BinaryFormatDataStructure
 {
@@ -19,6 +20,17 @@ namespace BinaryFormatDataStructure
             for (int i = 0; i < MemberNames.Length; i++)
             {
                 MemberNames[i] = reader.ReadString();
+            }
+        }
+
+        internal void Write(BinaryWriter writer)
+        {
+            writer.Write(ObjectId);
+            writer.Write(Name);
+            writer.Write(MemberCount);
+            for (int i = 0; i < MemberNames.Length; i++)
+            {
+                writer.Write(MemberNames[i]);
             }
         }
     }

@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 
 namespace BinaryFormatDataStructure
 {
@@ -11,6 +12,12 @@ namespace BinaryFormatDataStructure
         {
             ObjectId = reader.ReadInt32();
             MetadataId = reader.ReadInt32();
+        }
+
+        internal void Write(BinaryWriter writer)
+        {
+            writer.Write(ObjectId);
+            writer.Write(MetadataId);
         }
     }
 }

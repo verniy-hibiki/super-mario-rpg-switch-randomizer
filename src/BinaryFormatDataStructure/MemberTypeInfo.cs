@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 
 namespace BinaryFormatDataStructure
 {
@@ -33,6 +34,30 @@ namespace BinaryFormatDataStructure
                     var typeInfo = new ClassTypeInfo();
                     typeInfo.Read(reader);
                     AdditionalInfos[i] = typeInfo;
+                }
+            }
+        }
+
+        internal void Write(BinaryWriter writer)
+        {
+            for (int i = 0; i < BinaryType.Length; i++)
+            {
+                writer.Write((byte)BinaryType[i]);
+            }
+            for (int i = 0; i < AdditionalInfos.Length; i++)
+            {
+                if (BinaryType[i] == BinaryFormatDataStructure.BinaryType.Primitive || BinaryType[i] == BinaryFormatDataStructure.BinaryType.PrimitiveArray)
+                {
+                    writer.Write((byte)(PrimitiveType)AdditionalInfos[i]);
+                }
+                else if (BinaryType[i] == BinaryFormatDataStructure.BinaryType.SystemClass)
+                {
+                    writer.Write((string)AdditionalInfos[i]);
+                }
+                else if (BinaryType[i] == BinaryFormatDataStructure.BinaryType.Class)
+                {
+                    var typeInfo = (ClassTypeInfo)AdditionalInfos[i];
+                    typeInfo.Write(writer);
                 }
             }
         }
