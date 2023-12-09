@@ -560,7 +560,6 @@ namespace BinaryFormatDataStructure
 
         private object ReadArray(ArraySinglePrimitiveRecord record)
         {
-            Console.WriteLine(record);
             switch (record.PrimitiveType)
             {
                 case PrimitiveType.Boolean:

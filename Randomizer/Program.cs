@@ -13,21 +13,26 @@ class Program
         public static string INITIALIZE = "INITIALIZE";
         public static string EQUIP = "EQUIP";
         public static string ITEMS = "ITEMS";
+        public static string ITEMS_PRICE = "ITEMS_PRICE";
         public static string TREASURE = "TREASURE";
         public static string LEVELUP = "LEVELUP";
         public static string ENCOUNTER = "ENCOUNTER";
+        public static string SHOP = "SHOP";
     }
     static Dictionary<string, bool> modules = new Dictionary<string, bool>() {
         {MODULES.INITIALIZE,false },
         {MODULES.EQUIP,false },
         {MODULES.ITEMS,false },
+        {MODULES.ITEMS_PRICE,false },
         {MODULES.TREASURE,false },
         {MODULES.LEVELUP,false },
         {MODULES.ENCOUNTER,false },
+        {MODULES.SHOP,false },
     };
     static string base_path = @"romfs\Data\StreamingAssets\data_tbl\";
     static string dest_path = @"outout\romfs\Data\StreamingAssets\data_tbl\";
     private static IEnumerable<int> all_items = new List<int>();
+    private static List<int> shop_items = new List<int>();
     private static List<int>[] all_equipable = new List<int>[6]
     {
         new List<int>(),
@@ -39,41 +44,97 @@ class Program
     };
     public static void RandomizeEncounter()
     {
-        var file = "encounter_pattern";
+        var file3 = "encounter";
+        var file2 = "encounter_pattern";
+        var file = "monster";
         var path = base_path + file + ".tbl";
+        var path2 = base_path + file2 + ".tbl";
+        var path3 = base_path + file3 + ".tbl";
         var destination = dest_path + file + ".tbl";
+        var destination2 = dest_path + file2 + ".tbl";
+        var destination3 = dest_path + file3 + ".tbl";
+
+        NRBFReader reader1, reader2, reader3;
+        BinaryObject[] monsters, encounters, monsters_ori, encounters_meta;
 
         using (var stream = File.OpenRead(path))
         {
-            var reader = new NRBFReader(stream);
-            var result = ((Object[])reader.Parse()).Select(x => (BinaryObject)x).ToArray();
-            Random r = new Random();
+            reader1 = new NRBFReader(stream);
+            monsters_ori = ((Object[])reader1.Parse()).Select(x => (BinaryObject)x).ToArray();
+        }
+        using (var stream = File.OpenRead(path))
+        {
+            reader1 = new NRBFReader(stream);
+            monsters = ((Object[])reader1.Parse()).Select(x => (BinaryObject)x).ToArray();
+        }
+        using (var stream = File.OpenRead(path2))
+        {
+            reader2 = new NRBFReader(stream);
+            encounters = ((Object[])reader2.Parse()).Select(x => (BinaryObject)x).ToArray();
+        }
+        using (var stream = File.OpenRead(path3))
+        {
+            reader3 = new NRBFReader(stream);
+            encounters_meta = ((Object[])reader3.Parse()).Select(x => (BinaryObject)x).ToArray();
+        }
+        Random r = new Random();
 
+        var event_battles = encounters_meta.Where(x => (bool)x["_is_event_battle"]).ToList();
+        var non_randomizable_battles = event_battles.SelectMany(x => ((int[])x["_encount_ptn_id"])).Distinct().ToList();
+        var randomizable_montsters = encounters.Where(item => !non_randomizable_battles.Contains((int)item["_encount_pattern_id"]))
+                                           .SelectMany(item => (int[])(int[])item["_monster_id"]).Distinct().ToList();
 
-            if (modules[MODULES.ENCOUNTER])
+        if (modules[MODULES.ENCOUNTER])
+        {
+            Console.WriteLine("Randomizing encounters");
+            var all_ids = monsters.Select(x => ((int)x["_character_id"])).Where(x => x > 1 && randomizable_montsters.Contains(x)).ToList();
+            var shuffled_ids = all_ids.OrderBy(x => r.Next()).ToList();
+
+            //for (var i = 0; i < all_ids.Count; i++)
+            //{
+            //    var dest_monster = monsters.First(x => (int)x["_character_id"] == shuffled_ids[i]);
+            //    var source_monster = monsters_ori.First(x => (int)x["_character_id"] == all_ids[i]);
+
+            //    foreach (var stat in new string[]
+            //       {
+            //           "_hp", "_fp", "_attack","_defense", "_magic_attack","_magic_defense"
+            //       })
+            //    {
+            //        dest_monster[stat] = Math.Max(1, (int)source_monster[stat]);
+            //    }
+            //}
+            foreach (var item in encounters)
             {
-                var all_ids = result.SelectMany(x => ((int[])x["_monster_id"])).Where(x => x > 1001).Distinct().ToList();
-
-                Console.WriteLine("Randomizing encounters");
-                foreach (var item in result)
+                if (non_randomizable_battles.Contains((int)item["_encount_pattern_id"])) continue;
+                var lst = (int[])item["_monster_id"];
+                for (var i = 0; i < lst.Length; i++)
                 {
-                    var lst = (int[])item["_monster_id"];
-                    for (var i = 0; i < lst.Length; i++)
+                    if (lst[i] > 1001)
                     {
-                        if (lst[i] > 0)
-                        {
-                            lst[i] = all_ids.Where(x => x >= lst[i]-40 && x <= lst[i] + 40).OrderBy(x => r.Next()).First();
-                        }
+                        var mon_id = lst[i];
+                        //var idx = all_ids.IndexOf(mon_id);
+                        //if (idx != -1)
+                        //{
+                        //    var new_id = shuffled_ids[idx];
+                        //    lst[i] = new_id;
+                        //}
+                        while(lst[i] == mon_id)
+                            lst[i] = all_ids.Where(x => x >= lst[i] - 40 && x <= lst[i] + 40).OrderBy(x => r.Next()).First();
                     }
                 }
             }
+        }
 
-            System.IO.File.Delete(destination);
-            using (var stream_o = File.OpenWrite(destination))
-            {
-                reader.WriteStream(stream_o);
-            }
-        };
+        System.IO.File.Delete(destination);
+        using (var stream_o = File.OpenWrite(destination))
+        {
+            reader1.WriteStream(stream_o);
+        }
+        System.IO.File.Delete(destination2);
+        using (var stream_o = File.OpenWrite(destination2))
+        {
+            reader2.WriteStream(stream_o);
+        }
 
     }
     public static void RandomizeCharacterInitialStats()
@@ -226,6 +287,8 @@ class Program
             foreach (var item in result)
             {
                 items.Add((int)item["_item_id"]);
+
+               
                 if (modules[MODULES.EQUIP])
                 {
                     //_can_equip_mario,_can_equip_mallow,_can_equip_geno,_can_equip_kupper,_can_equip_peach
@@ -254,9 +317,24 @@ class Program
 
                     }
                 }
-                if (modules[MODULES.ITEMS])
+                if (modules[MODULES.ITEMS_PRICE])
                 {
                     item["_buy_price"] = (int)((int)item["_buy_price"] * (r.NextDouble() + 0.5));
+                    item["_buy_price_alto"] = (int)((int)item["_buy_price_alto"] * (r.NextDouble() + 0.5));
+                    item["_buy_price_tenor"] = (int)((int)item["_buy_price_tenor"] * (r.NextDouble() + 0.5));
+                    item["_buy_price_soprano"] = (int)((int)item["_buy_price_soprano"] * (r.NextDouble() + 0.5));
+                    item["_sell_price"] = (int)((int)item["_sell_price"] * (r.NextDouble() + 0.5));
+                    item["_kaeru_coin_price"] = (int)((int)item["_kaeru_coin_price"] * (r.NextDouble() + 0.5));
+                    item["_point_buy_price"] = (int)((int)item["_point_buy_price"] * (r.NextDouble() + 0.5));
+                    item["_point_sell_price"] = (int)((int)item["_point_sell_price"] * (r.NextDouble() + 0.5));
+                }
+                if ((int)item["_explain_id"] > 0 && (int)item["_buy_price"] >0)
+                {
+                    shop_items.Add((int)item["_item_id"]);
+                }
+                if (modules[MODULES.ITEMS])
+                {
+                    item["_speed"] = (int)((int)item["_speed"] * (r.NextDouble() + 0.5));
                     item["_attack"] = (int)((int)item["_attack"] * (r.NextDouble() + 0.5));
                     item["_magic_attack"] = (int)((int)item["_magic_attack"] * (r.NextDouble() + 0.5));
                     item["_defense"] = (int)((int)item["_defense"] * (r.NextDouble() + 0.5));
@@ -284,6 +362,39 @@ class Program
             }
         };
     }
+    public static void RandomizeShop()
+    {
+        var file = "shop";
+        var path = base_path + file + ".tbl";
+        var destination = dest_path + file + ".tbl";
+
+        using (var stream = File.OpenRead(path))
+        {
+            var reader = new NRBFReader(stream);
+            var result = ((Object[])reader.Parse()).Select(x => (BinaryObject)x).ToArray();
+            Random r = new Random();
+            if (modules[MODULES.SHOP])
+            {
+                Console.WriteLine("Randomizing shops");
+            }
+
+            foreach (var item in result)
+            {
+                int[] items_for_sale = (int[])item["_item_id"];
+                for (int i = 0; i < items_for_sale.Length; i++)
+                {
+                    items_for_sale[i] = shop_items.OrderBy(x => r.Next()).First();
+                }
+            }
+
+            System.IO.File.Delete(destination);
+            using (var stream_o = File.OpenWrite(destination))
+            {
+                reader.WriteStream(stream_o);
+            }
+        };
+    }
+
     public static void RandomizeTreasure()
     {
         var file = "treasure_box";
@@ -306,6 +417,7 @@ class Program
             var possible_7_value = result.Where(x => (int)x["_treasure_type"] == 7).Select(x => (int)x["_treasure_value"]).Distinct();
             var possible_new_types = new int[] { 1, 2, 3, 7 };
             var possible_values = new[] { possible_0_value, all_items, possible_2_value, possible_3_value, possible_4_value, possible_5_value, possible_6_value, possible_7_value };
+            var resetTypes = result.Select(x => x["_reset_type"]).Distinct().ToList();
             if (modules[MODULES.TREASURE])
             {
                 Console.WriteLine("Randomizing treasure boxes");
@@ -314,6 +426,7 @@ class Program
                     if (possible_new_types.Contains((int)item["_treasure_type"]))
                     {
                         //If is not a special chest, then randomize it
+                        item["_reset_type"] = 1;
                         item["_treasure_type"] = (int)possible_new_types[r.Next(possible_new_types.Length)];
                         item["_treasure_value"] = (int)(possible_values[(int)item["_treasure_type"]].OrderBy(x => r.Next()).First());
                     }
@@ -421,6 +534,7 @@ class Program
         RandomizeTreasure();
         RandomizeCharacterLevelUp();
         RandomizeEncounter();
+        RandomizeShop();
         //player_action
         //encounter
         //shop
