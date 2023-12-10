@@ -145,6 +145,8 @@ namespace BinaryFormatDataStructure
                 }
                 else if (obj is String)
                 {
+                    //writer.Write((byte)RecordType.BinaryObjectString);
+                    //writer.Write(findId(obj));
                     writer.Write((String)obj);
                 }
                 else if (obj is Single)
@@ -163,8 +165,9 @@ namespace BinaryFormatDataStructure
                 {
                     writer.Write((byte)RecordType.ArraySinglePrimitive);
                     serializedObjects[findId(i_arr)] = i_arr;
-                    var record = new ArraySinglePrimitiveRecord() { 
-                        ArrayInfo = new ArrayInfo { Length= i_arr .Length, ObjectId = findId(i_arr)},
+                    var record = new ArraySinglePrimitiveRecord()
+                    {
+                        ArrayInfo = new ArrayInfo { Length = i_arr.Length, ObjectId = findId(i_arr) },
                         PrimitiveType = PrimitiveType.Int32
                     };
                     record.Write(writer);
@@ -188,6 +191,25 @@ namespace BinaryFormatDataStructure
                         writer.Write(si_arr[i]);
                     }
                 }
+                else if (obj is bool[] bi_arr)
+                {
+                    writer.Write((byte)RecordType.ArraySinglePrimitive);
+                    serializedObjects[findId(bi_arr)] = bi_arr;
+                    var record = new ArraySinglePrimitiveRecord()
+                    {
+                        ArrayInfo = new ArrayInfo { Length = bi_arr.Length, ObjectId = findId(bi_arr) },
+                        PrimitiveType = PrimitiveType.Boolean
+                    };
+                    record.Write(writer);
+                    for (var i = 0; i < bi_arr.Length; i++)
+                    {
+                        writer.Write(bi_arr[i]);
+                    }
+                }
+                else if (obj is BinaryObjectStringRecord)
+                {
+                    //Do nothing, already serialized
+                }
                 else
                 {
                     var type = obj?.GetType();
@@ -204,6 +226,30 @@ namespace BinaryFormatDataStructure
                         Write(owner[memberNames[i]]);
                         //owner.AddMember(memberNames[i], PrimitiveReader.Read((PrimitiveType)memberTypeInfo.AdditionalInfos[i], _reader));
                     }
+                    else if (memberTypeInfo.BinaryType[i] == BinaryType.String)
+                    {
+                        if (owner[memberNames[i]] == null)
+                        {
+                            writer.Write((byte)RecordType.ObjectNull);
+                        }
+                        else
+                        {
+                            if (serializedObjects.Any(x => x.Value == owner[memberNames[i]]))
+                            {
+                                writer.Write((byte)RecordType.MemberReference);
+                                var id = findId(owner[memberNames[i]]);
+                                writer.Write(id);
+                            }
+                            else
+                            {
+                                var record = ((BinaryObjectStringRecord)owner[memberNames[i]]);
+                                record.Write(writer);
+                                serializedObjects[record.ObjectId] = record;
+                            }
+                        }
+                        //Write(owner[memberNames[i]]);
+                        //owner.AddMember(memberNames[i], PrimitiveReader.Read((PrimitiveType)memberTypeInfo.AdditionalInfos[i], _reader));
+                    }
                     else
                     {
                         writer.Write((byte)RecordType.MemberReference);
@@ -217,7 +263,7 @@ namespace BinaryFormatDataStructure
                 writer.Write((byte)RecordType.BinaryLibrary);
                 BinaryLibraryRecord.Write(writer, o.Key, o.Value);
             }
-           
+
             foreach (var o in _objectTracker)
             {
                 if (!serializedObjects.ContainsKey(o.Key))
@@ -261,7 +307,7 @@ namespace BinaryFormatDataStructure
         {
             object currentObject = null;
             recordType = (RecordType)_reader.ReadByte();
-            //Console.WriteLine(recordType);
+            Console.WriteLine(recordType);
             switch (recordType)
             {
                 case RecordType.ClassWithId:
@@ -367,7 +413,7 @@ namespace BinaryFormatDataStructure
                     {
                         var result = new BinaryObjectStringRecord();
                         result.Read(_reader);
-                        currentObject = result.Value;
+                        currentObject = result;
                         if (result.ObjectId != 0)
                         {
                             _objectTracker[result.ObjectId] = currentObject;

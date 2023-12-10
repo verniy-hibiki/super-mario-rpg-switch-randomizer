@@ -8,9 +8,35 @@ using BinaryFormatDataStructure;
 
 class Program
 {
+    [Serializable]
+    class Validator
+    {
+        public Validator()
+        {
+            a = "A";
+            b = new V2[] {
+                new V2(){ /*d="bob"*/ }
+            };
+        }
+        public string a { get; set; }
+
+        public V2[] b { get; set; }
+    }
+    [Serializable]
+    class V2
+    {
+        public int a { get; set; } = int.MaxValue;
+        public int b { get; set; } = int.MaxValue;
+        public int c { get; set; } = int.MaxValue;
+        //public string d { get; set; }
+        public int e { get; set; } = int.MaxValue;
+        public int f { get; set; } = int.MaxValue;
+    }
+
     static class MODULES
     {
         public static string INITIALIZE = "INITIALIZE";
+        public static string SPECIALS = "SPECIALS";
         public static string EQUIP = "EQUIP";
         public static string ITEMS = "ITEMS";
         public static string ITEMS_PRICE = "ITEMS_PRICE";
@@ -18,9 +44,12 @@ class Program
         public static string LEVELUP = "LEVELUP";
         public static string ENCOUNTER = "ENCOUNTER";
         public static string SHOP = "SHOP";
+        public static string CUTSCENES_R = "CUTSCENES_R";
+        public static string CUTSCENES_S = "CUTSCENES_S";
     }
     static Dictionary<string, bool> modules = new Dictionary<string, bool>() {
         {MODULES.INITIALIZE,false },
+        {MODULES.SPECIALS,false },
         {MODULES.EQUIP,false },
         {MODULES.ITEMS,false },
         {MODULES.ITEMS_PRICE,false },
@@ -28,6 +57,8 @@ class Program
         {MODULES.LEVELUP,false },
         {MODULES.ENCOUNTER,false },
         {MODULES.SHOP,false },
+        {MODULES.CUTSCENES_R,false },
+        {MODULES.CUTSCENES_S,false },
     };
     static string base_path = @"romfs\Data\StreamingAssets\data_tbl\";
     static string dest_path = @"outout\romfs\Data\StreamingAssets\data_tbl\";
@@ -103,6 +134,40 @@ class Program
             //        dest_monster[stat] = Math.Max(1, (int)source_monster[stat]);
             //    }
             //}
+            foreach (var item in monsters)
+            {
+                item["_is_drop_100per"] = true;
+                item["_drop_item_id_1"] = all_items.OrderBy(x => r.Next()).First();
+                item["_drop_item_id_2"] = all_items.OrderBy(x => r.Next()).First();
+                item["_coin"] = r.Next(10, 20);
+
+                /*_monster_id,_character_id,
+                 * _hp,_fp,_attack,_defense,_magic_attack,_magic_defense,_speed,_avoid,
+                 * 
+                 * _resist_jump,_resist_fire,_resist_thunder,_resist_ice,
+                 * _invalid_fear,_invalid_poison,_invalid_sleep,_invalid_silent,_resist_sheep,_invalid_geno_cutter,_invalid_holy_water,
+                 * _invalid_yoshi_cookie,_start_state,_exp,_coin,_is_drop_100per,_drop_item_id_1,_drop_item_id_2,
+                 * _drop_item_by_yoshi_cookie,_bonus_flower_id,_bonus_flower_persent,_appear_ptn_id,_escape_ptn_id,
+                 * _collision_size_x,_collision_size_y,_collision_size_z,_collision_offset_x,_collision_offset_y,
+                 * _collision_offset_z,_scale,_nanikangaeteruno_id,_nanikangaeteruno_mess_num,_ryuuyou_chara_id,
+                 * _cookie_hit_percent,_monster_book_sort_order,_monster_book_msg_id,_monster_book_area_id,
+                 * _monster_book_fixed_position,_monster_book_encounter_id,_monster_book_encount_pattern_id,
+                 * _monster_book_multiple_display,_monster_book_camera_pattern,_monster_book_pos_move_x,
+                 * _monster_book_pos_move_z,_dying_disp*/
+                var stats = new string[] { "_hp","_fp","_attack","_defense","_magic_attack","_magic_defense","_speed","_exp"
+                    };
+                foreach (var stat in stats)
+                {
+                    item[stat] = Math.Max(1, (int)((int)item[stat] * (r.NextDouble() + 0.5)));
+                }
+
+                //item["_can_escape"] = true;
+            }
+            var d = encounters_meta.Select(c => c["_can_escape"]).ToList();
+            foreach (var item in encounters_meta)
+            {
+                item["_can_escape"] = true;
+            }
             foreach (var item in encounters)
             {
                 if (non_randomizable_battles.Contains((int)item["_encount_pattern_id"])) continue;
@@ -118,7 +183,7 @@ class Program
                         //    var new_id = shuffled_ids[idx];
                         //    lst[i] = new_id;
                         //}
-                        while(lst[i] == mon_id)
+                        while (lst[i] == mon_id)
                             lst[i] = all_ids.Where(x => x >= lst[i] - 40 && x <= lst[i] + 40).OrderBy(x => r.Next()).First();
                     }
                 }
@@ -135,7 +200,11 @@ class Program
         {
             reader2.WriteStream(stream_o);
         }
-
+        System.IO.File.Delete(destination3);
+        using (var stream_o = File.OpenWrite(destination3))
+        {
+            reader3.WriteStream(stream_o);
+        }
     }
     public static void RandomizeCharacterInitialStats()
     {
@@ -163,12 +232,16 @@ class Program
                     var skills = (int[])item["_learned_skill_id"];
 
                     item["_armor"] = (int)(new int[] { 0, 0, 0, 0, 59 }.OrderBy(x => r.Next()).First());
-                    item["_weapon"] = (int)(new int[] { 0, 0, 0, 0, 27 }.OrderBy(x => r.Next()).First());
+                    item["_weapon"] = (int)(new int[] { 27 }.OrderBy(x => r.Next()).First());
 
-                    var learnableSkills = new int[] { 0, 103, 109, 111, 115, 120, 124, 125 };
-                    var new_skiils = learnableSkills.OrderBy(x => r.Next()).Take(2).ToList();
-                    skills[0] = new_skiils[0];
-                    skills[1] = new_skiils[1];
+                    if (modules[MODULES.SPECIALS])
+                    {
+                        var learnableSkills = new int[] { /*0, 103, 109, 111, 115, 120,*/
+                124, 125 };
+                        var new_skiils = learnableSkills.OrderBy(x => r.Next()).Take(2).ToList();
+                        skills[0] = new_skiils[0];
+                        skills[1] = new_skiils[1];
+                    }
                 }
             }
 
@@ -212,22 +285,25 @@ class Program
 
             if (modules[MODULES.LEVELUP])
             {
-
+                BinaryObject previous = null;
                 Console.WriteLine("Randomizing players level up for " + character);
                 foreach (var item in result.Skip(1))
                 {
-                    item["_hp"] = (int)((int)item["_hp"] * (r.NextDouble() + 0.5));
-                    item["_hp_bonus"] = (int)((int)item["_hp_bonus"] * (r.NextDouble() + 0.5));
-                    item["_attack"] = (int)((int)item["_attack"] * (r.NextDouble() + 0.5));
-                    item["_attack_bonus"] = (int)((int)item["_attack_bonus"] * (r.NextDouble() + 0.5));
-                    item["_magic_attack"] = (int)((int)item["_magic_attack"] * (r.NextDouble() + 0.5));
-                    item["_magic_attack_bonus"] = (int)((int)item["_magic_attack_bonus"] * (r.NextDouble() + 0.5));
-                    item["_defence"] = (int)((int)item["_defence"] * (r.NextDouble() + 0.5));
-                    item["_defence_bonus"] = (int)((int)item["_defence_bonus"] * (r.NextDouble() + 0.5));
-                    item["_magic_defence"] = (int)((int)item["_magic_defence"] * (r.NextDouble() + 0.5));
-                    item["_magic_defence_bonus"] = (int)((int)item["_magic_defence_bonus"] * (r.NextDouble() + 0.5));
-                    //Crash the start menu if enabled? Will find a way one day...
-                    //item["_learn_skill"] = learnableSkill.OrderBy(x => r.Next()).First();
+                    var stats = new string[] { "_hp", "_hp_bonus", "_attack", "_attack_bonus",
+                        "_magic_attack","_magic_attack_bonus","_defence",
+                        "_defence_bonus","_magic_defence","_magic_defence_bonus"
+                    };
+                    foreach (var stat in stats)
+                    {
+                        item[stat] = (int)((int)item[stat] * (r.NextDouble() + 0.5));
+                        if (previous != null)
+                        {
+                            //Prevent too big of debuff
+                            item[stat] = Math.Max((int)previous[stat] - 10, (int)item[stat]);
+                        }
+                    }
+
+                    previous = item;
                 }
             }
 
@@ -253,8 +329,6 @@ class Program
 
             if (modules[MODULES.LEVELUP])
             {
-
-                Console.WriteLine("Randomizing players level up for " + character);
                 foreach (var item in result.Skip(1))
                 {
                     learnableSkill.Add((int)item["_learn_skill"]);
@@ -288,7 +362,7 @@ class Program
             {
                 items.Add((int)item["_item_id"]);
 
-               
+
                 if (modules[MODULES.EQUIP])
                 {
                     //_can_equip_mario,_can_equip_mallow,_can_equip_geno,_can_equip_kupper,_can_equip_peach
@@ -320,15 +394,17 @@ class Program
                 if (modules[MODULES.ITEMS_PRICE])
                 {
                     item["_buy_price"] = (int)((int)item["_buy_price"] * (r.NextDouble() + 0.5));
+                    //item["_buy_price"] = 1;
                     item["_buy_price_alto"] = (int)((int)item["_buy_price_alto"] * (r.NextDouble() + 0.5));
                     item["_buy_price_tenor"] = (int)((int)item["_buy_price_tenor"] * (r.NextDouble() + 0.5));
                     item["_buy_price_soprano"] = (int)((int)item["_buy_price_soprano"] * (r.NextDouble() + 0.5));
                     item["_sell_price"] = (int)((int)item["_sell_price"] * (r.NextDouble() + 0.5));
+                    //item["_sell_price"] = 100;
                     item["_kaeru_coin_price"] = (int)((int)item["_kaeru_coin_price"] * (r.NextDouble() + 0.5));
                     item["_point_buy_price"] = (int)((int)item["_point_buy_price"] * (r.NextDouble() + 0.5));
                     item["_point_sell_price"] = (int)((int)item["_point_sell_price"] * (r.NextDouble() + 0.5));
                 }
-                if ((int)item["_explain_id"] > 0 && (int)item["_buy_price"] >0)
+                if ((int)item["_explain_id"] > 0 && (int)item["_buy_price"] > 0)
                 {
                     shop_items.Add((int)item["_item_id"]);
                 }
@@ -340,8 +416,8 @@ class Program
                     item["_defense"] = (int)((int)item["_defense"] * (r.NextDouble() + 0.5));
                     item["_magic_defense"] = (int)((int)item["_magic_defense"] * (r.NextDouble() + 0.5));
 
-                    item["_possession_limit_easy"] = Math.Max(2, (int)((int)item["_possession_limit_easy"] * (r.NextDouble() + 0.5)));
-                    item["_possession_limit_normal"] = Math.Max(2, (int)((int)item["_possession_limit_normal"] * (r.NextDouble() + 0.5)));
+                    item["_possession_limit_easy"] = 100;// Math.Max(2, (int)((int)item["_possession_limit_easy"] * (r.NextDouble() + 0.5)));
+                    item["_possession_limit_normal"] = 100;// Math.Max(2, (int)((int)item["_possession_limit_normal"] * (r.NextDouble() + 0.5)));
                 }
                 if ((bool)item["_can_equip_mario"])
                     all_equipable[1].Add((int)item["_item_id"]);
@@ -362,9 +438,16 @@ class Program
             }
         };
     }
-    public static void RandomizeShop()
+    public static void RandomizeShop(string shop = null)
     {
-        var file = "shop";
+        if (shop == null)
+        {
+            RandomizeShop("shop");
+            RandomizeShop("frog_shop");
+            RandomizeShop("pickup_shop");
+            return;
+        }
+        var file = shop;
         var path = base_path + file + ".tbl";
         var destination = dest_path + file + ".tbl";
 
@@ -395,6 +478,42 @@ class Program
         };
     }
 
+    public static void RandomizeUnlocks()
+    {
+        var file = "event_status";
+        var path = base_path + file + ".tbl";
+        var destination = dest_path + file + ".tbl";
+
+        using (var stream = File.OpenRead(path))
+        {
+            var reader = new NRBFReader(stream);
+            var result = ((Object[])reader.Parse()).Select(x => (BinaryObject)x).ToArray();
+            Random r = new Random();
+
+            var unlocks = result.Where(x => (int)x["_party_num"] > 0).Distinct().ToArray();
+            foreach (var item in result)
+            {
+                //_bounus_hp
+                var bonus_hp = (bool[])item["_bounus_hp"];
+                for (var i = 0; i < bonus_hp.Length; i++) bonus_hp[i] = true;
+                var bonus_pow = (bool[])item["_bounus_pow"];
+                for (var i = 0; i < bonus_pow.Length; i++) bonus_pow[i] = true;
+                var bonus_s = (bool[])item["_bounus_s"];
+                for (var i = 0; i < bonus_s.Length; i++) bonus_s[i] = true;
+
+                //_coin
+                //_frog_coin
+                item["_coin"] = r.Next(1, 50);
+                item["_frog_coin"] = r.Next(1, 50);
+            }
+
+            System.IO.File.Delete(destination);
+            using (var stream_o = File.OpenWrite(destination))
+            {
+                reader.WriteStream(stream_o);
+            }
+        };
+    }
     public static void RandomizeTreasure()
     {
         var file = "treasure_box";
@@ -456,6 +575,24 @@ class Program
                 reader.WriteStream(stream_o);
             }
         };
+    }
+    public static void RandomizeCutscenes()
+    {
+        if (modules[MODULES.CUTSCENES_R] || modules[MODULES.CUTSCENES_S])
+        {
+            var path = base_path + "..\\movies\\";
+            var destination = dest_path + "..\\movies\\";
+            var r = new Random();
+            var ori_file_name = System.IO.Directory.GetFiles(path).Select(x => (new System.IO.FileInfo(x)).Name).ToList();
+            var shuffled = ori_file_name.OrderBy(x => r.Next()).ToList();
+            for (var i = 0; i < shuffled.Count; i++)
+            {
+                if (modules[MODULES.CUTSCENES_R])
+                    System.IO.File.Copy(path + ori_file_name[i], destination + shuffled[i], true);
+                if (modules[MODULES.CUTSCENES_S])
+                    System.IO.File.Copy(path + "movie_009.usm", destination + shuffled[i], true);
+            }
+        }
     }
     public static void ReadConfig(string[] args)
     {
@@ -519,6 +656,7 @@ class Program
             } while (needManualConfirm);
         }
     }
+
     public static void Main(string[] args)
     {
         ReadConfig(args);
@@ -528,6 +666,7 @@ class Program
             return;
         }
         System.IO.Directory.CreateDirectory(dest_path);
+        System.IO.Directory.CreateDirectory(dest_path + "\\..\\movies\\");
 
         RandomizeItems();
         RandomizeCharacterInitialStats();
@@ -535,34 +674,61 @@ class Program
         RandomizeCharacterLevelUp();
         RandomizeEncounter();
         RandomizeShop();
+        RandomizeUnlocks();
+        RandomizeCutscenes();
         //player_action
         //encounter
         //shop
         //level_up
 
+        //BinaryFormatter bf = new BinaryFormatter();
+        //System.IO.File.Delete("demo.bin");
+        //using (var stream = File.OpenWrite("demo.bin"))
+        //{
+        //    var arr = new Validator[] { new Validator() { a = "blob" }, new Validator() { a = "blob" }, null };
+        //    arr[2] = arr[1];
+        //    bf.Serialize(stream, arr);
+        //}
 
-        var file = "stella_item_list";
-        var path = base_path + file + ".tbl";
-        var destination = dest_path + file + ".tbl";
+        //using (var stream = File.OpenRead("demo.bin"))
+        //{
+        //    var reader = new NRBFReader(stream);
+        //    var result = (reader.Parse());
+        //    Console.WriteLine(result);
+        //    System.IO.File.Delete("demo_o.bin");
+        //    using (var stream_o = File.OpenWrite("demo_o.bin"))
+        //    {
+        //        reader.WriteStream(stream_o);
+        //    }
+        //};
 
-        using (var stream = File.OpenRead(path))
-        {
-            var reader = new NRBFReader(stream);
-            var result = ((Object[])reader.Parse()).Select(x => (BinaryObject)x).ToArray();
+        //using (var stream = File.OpenRead("demo_o.bin"))
+        //{
+        //    var reader = new NRBFReader(stream);
+        //    var result = (reader.Parse());
+        //}
 
-            Console.WriteLine(result);
-            System.IO.File.Delete(destination);
-            using (var stream_o = File.OpenWrite(destination))
-            {
-                reader.WriteStream(stream_o);
-            }
-        };
+        //var file = "encounter";
+        //var path = base_path + file + ".tbl";
+        //var destination = dest_path + file + ".tbl";
 
-        /*using (var stream = File.OpenRead(destination))
-        {
-            var reader = new NRBFReader(stream);
-            var result = ((Object[])reader.Parse()).Select(x => (BinaryObject)x).ToArray();
-        }*/
+        //using (var stream = File.OpenRead(path))
+        //{
+        //    var reader = new NRBFReader(stream);
+        //    var result = (reader.Parse());
+        //    Console.WriteLine(result);
+        //    System.IO.File.Delete(destination);
+        //    using (var stream_o = File.OpenWrite(destination))
+        //    {
+        //        reader.WriteStream(stream_o);
+        //    }
+        //};
+
+        //using (var stream = File.OpenRead(destination))
+        //{
+        //    var reader = new NRBFReader(stream);
+        //    var result = (reader.Parse());
+        //}
 
     }
 }

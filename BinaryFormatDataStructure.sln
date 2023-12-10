@@ -5,7 +5,13 @@ VisualStudioVersion = 17.0.32112.339
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BinaryFormatDataStructure", "src\BinaryFormatDataStructure\BinaryFormatDataStructure.csproj", "{9D3CB8CB-DDE6-4F0A-A041-5392FF65C68F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Randomizer", "Randomizer\Randomizer.csproj", "{97A7B4DF-6B82-495C-923A-B45E22922402}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Randomizer", "Randomizer\Randomizer.csproj", "{97A7B4DF-6B82-495C-923A-B45E22922402}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{94091C10-AFCD-406C-B529-10612E78D993}"
+	ProjectSection(SolutionItems) = preProject
+		Randomizer\bin\Debug\net6.0\outout\romfs\Data\StreamingAssets\data_tbl\encounter.tbl = Randomizer\bin\Debug\net6.0\outout\romfs\Data\StreamingAssets\data_tbl\encounter.tbl
+		Randomizer\bin\Debug\net6.0\romfs\Data\StreamingAssets\data_tbl\encounter.tbl = Randomizer\bin\Debug\net6.0\romfs\Data\StreamingAssets\data_tbl\encounter.tbl
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

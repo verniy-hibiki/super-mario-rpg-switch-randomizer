@@ -12,5 +12,11 @@ namespace BinaryFormatDataStructure
             ObjectId = reader.ReadInt32();
             Value = reader.ReadString();
         }
+        internal void Write(BinaryWriter bw)
+        {
+            bw.Write((byte)RecordType.BinaryObjectString);
+            bw.Write(ObjectId);
+            bw.Write(Value);
+        }
     }
 }
