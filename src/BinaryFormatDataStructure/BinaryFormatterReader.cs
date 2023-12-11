@@ -9,11 +9,11 @@ namespace BinaryFormatDataStructure
 {
     public class NRBFReader
     {
-        private BinaryReader _reader;
+        private readonly BinaryReader _reader;
         private bool _endOfStream = false;
-        private Dictionary<int, object> _objectTracker = new Dictionary<int, object>();
-        private Dictionary<int, string> _libraries = new Dictionary<int, string>();
-        private List<DeferredItem> _deferredItems = new List<DeferredItem>();
+        private readonly Dictionary<int, object> _objectTracker = new Dictionary<int, object>();
+        private readonly Dictionary<int, string> _libraries = new Dictionary<int, string>();
+        private readonly List<DeferredItem> _deferredItems = new List<DeferredItem>();
         private SerializationHeaderRecord header;
         private RecordType recordType;
 
@@ -73,7 +73,7 @@ namespace BinaryFormatDataStructure
                     //Write Binary type
                     writer.Write((byte)BinaryType.Class);
                     //Write Class info
-                    BinaryObject b = (BinaryObject)o_arr[0];
+                    BinaryObject b = (BinaryObject)o_arr.FirstOrDefault(x=>x!=null);
 
                     var classType = new ClassTypeInfo()
                     {
@@ -81,12 +81,42 @@ namespace BinaryFormatDataStructure
                         LibraryId = _libraries.FirstOrDefault(x => x.Value == b.AssemblyName).Key
                     };
                     classType.Write(writer);
-
+                    void HandleNull(object[] arr, ref int index)
+                    {
+                        var countNull = 0;
+                        int i;
+                        for (i = index;i<arr.Length && arr[i]==null;i++)
+                        {
+                            countNull++;
+                        }
+                        index = i - 1;
+                        if(countNull==1)
+                        {
+                            writer.Write((byte)RecordType.ObjectNull);
+                        }
+                        else if (countNull <= 255)
+                        {
+                            writer.Write((byte)RecordType.ObjectNullMultiple256);
+                            writer.Write((byte)countNull);
+                        }
+                        else 
+                        {
+                            writer.Write((byte)RecordType.ObjectNullMultiple);
+                            writer.Write((int)countNull);
+                        }
+                    }
                     for (var i = 0; i < o_arr.Length; i++)
                     {
-                        writer.Write((byte)RecordType.MemberReference);
-                        var id = findId(o_arr[i]);
-                        writer.Write(id);
+                        if (o_arr[i] != null)
+                        {
+                            writer.Write((byte)RecordType.MemberReference);
+                            var id = findId(o_arr[i]);
+                            writer.Write(id);
+                        }
+                        else
+                        {
+                            HandleNull(o_arr, ref i);
+                        }
                     }
                     //    Write(o_arr[i]);
                 }
@@ -109,10 +139,11 @@ namespace BinaryFormatDataStructure
                     if (serializedClasses.ContainsKey(bo.TypeName))
                     {
                         writer.Write((byte)RecordType.ClassWithId);
-                        var classWithIdRecord = new ClassWithIdRecord();
-
-                        classWithIdRecord.MetadataId = serializedClasses[bo.TypeName];
-                        classWithIdRecord.ObjectId = id;
+                        var classWithIdRecord = new ClassWithIdRecord
+                        {
+                            MetadataId = serializedClasses[bo.TypeName],
+                            ObjectId = id
+                        };
                         classWithIdRecord.Write(writer);
                         ClassSerializationRecord classRef = (ClassSerializationRecord)_objectTracker[classWithIdRecord.MetadataId];
                         WriteMembers(bo, classRef.ClassInfo.MemberNames, classRef.MemberTypeInfo);
@@ -139,23 +170,23 @@ namespace BinaryFormatDataStructure
                     }
 
                 }
-                else if (obj is Int32)
+                else if (obj is Int32 @int)
                 {
-                    writer.Write((int)obj);
+                    writer.Write(@int);
                 }
-                else if (obj is String)
+                else if (obj is String @string)
                 {
                     //writer.Write((byte)RecordType.BinaryObjectString);
                     //writer.Write(findId(obj));
-                    writer.Write((String)obj);
+                    writer.Write(@string);
                 }
-                else if (obj is Single)
+                else if (obj is Single @single)
                 {
-                    writer.Write((Single)obj);
+                    writer.Write(@single);
                 }
-                else if (obj is Boolean)
+                else if (obj is Boolean @bool)
                 {
-                    writer.Write((Boolean)obj);
+                    writer.Write(@bool);
                 }
                 else if (obj == null)
                 {
@@ -307,7 +338,7 @@ namespace BinaryFormatDataStructure
         {
             object currentObject = null;
             recordType = (RecordType)_reader.ReadByte();
-            Console.WriteLine(recordType);
+            //Console.WriteLine(recordType);
             switch (recordType)
             {
                 case RecordType.ClassWithId:

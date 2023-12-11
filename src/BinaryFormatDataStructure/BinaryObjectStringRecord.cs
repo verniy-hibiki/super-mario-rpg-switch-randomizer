@@ -2,10 +2,10 @@
 
 namespace BinaryFormatDataStructure
 {
-    internal class BinaryObjectStringRecord
+    public class BinaryObjectStringRecord
     {
-        public int ObjectId { get; internal set; }
-        public string Value { get; internal set; }
+        public int ObjectId { get; set; }
+        public string Value { get; set; }
 
         internal void Read(BinaryReader reader)
         {
