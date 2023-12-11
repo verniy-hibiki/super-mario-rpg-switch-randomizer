@@ -295,12 +295,13 @@ class Program
                 Console.WriteLine("Randomizing players initial stats");
                 foreach (var item in result)
                 {
-                    item["_hp"] = (int)((int)item["_hp"] * (Random()));
-                    item["_attack"] = (int)((int)item["_attack"] * (Random()));
-                    item["_magic_attack"] = (int)((int)item["_magic_attack"] * (Random()));
-                    item["_defence"] = (int)((int)item["_defence"] * (Random()));
-                    item["_magic_defence"] = (int)((int)item["_magic_defence"] * (Random()));
-                    item["_speeed"] = (int)((int)item["_speeed"] * (Random()));
+                    var stats = new string[] { "_hp","_attack",
+                        "_defence","_magic_attack","_magic_defence","_speeed"
+                    };
+                    foreach (var stat in stats)
+                    {
+                        item[stat] = Math.Max(1, (int)((int)item[stat] * (Random())));
+                    }
                     var skills = (int[])item["_learned_skill_id"];
 
                     item["_armor"] = (int)(new int[] { 0, 0, 0, 0, 59 }.OrderBy(x => r.Next()).First());
@@ -371,7 +372,13 @@ class Program
                             item[stat] = Math.Max((int)previous[stat] - 10, (int)item[stat]);
                         }
                     }
-
+                    if(modules[MODULES.SPECIALS])
+                    {
+                        if((int)item["_learn_skill"] > 0)
+                        {
+                            item["_learn_skill"] = learnableSkill.OrderBy(x => r.Next()).First();
+                        }
+                    }
                     previous = item;
                 }
             }
@@ -445,13 +452,9 @@ class Program
                             equipable = equipable.Select(x => r.NextDouble() > 0.5).ToArray();
 
                         item["_can_equip_mario"] = (bool)equipable[0];
-
                         item["_can_equip_mallow"] = (bool)equipable[1];
-
                         item["_can_equip_geno"] = (bool)equipable[2];
-
                         item["_can_equip_kupper"] = (bool)equipable[3];
-
                         item["_can_equip_peach"] = (bool)equipable[4];
 
                     }
@@ -479,6 +482,10 @@ class Program
                     {
                         var prev_value = (int)item[stat];
                         item[stat] = Math.Max(10,Math.Max(prev_value-5,(int)(prev_value * (Random()+0.25))));
+                        if(stat == "_attack" && (int)item["_equip_kind_id"] ==1)
+                        {
+                            item[stat] = (int)((int)item[stat] * 1.75);//Since weapons can't crit if they are on the wrong character
+                        }
                     }
 
                     item["_possession_limit_easy"] = 100;// Math.Max(2, (int)((int)item["_possession_limit_easy"] * (Random())));
