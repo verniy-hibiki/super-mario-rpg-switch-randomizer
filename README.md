@@ -30,3 +30,8 @@ Coming soon
 
 Thanks github.com/bbowyersmyth/BinaryFormatDataStructure for the MS-NRBF reader.
 We added writer support in their code.
+
+# Support
+
+You can support the creators via their twitch
+[Takstijn](https://twitch.tv/takstijn) [ObsidianMaker](https://twitch.tv/ObsidianMaker)
