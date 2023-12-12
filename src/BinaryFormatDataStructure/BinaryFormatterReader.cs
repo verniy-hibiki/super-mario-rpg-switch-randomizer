@@ -47,6 +47,12 @@ namespace BinaryFormatDataStructure
                     }
                     return false;
                 });
+                if(id.Key != 0)
+                {
+                    int nid = _objectTracker.Max(x => x.Key)+1;
+                    _objectTracker[nid] = obj;
+                    return nid;
+                }
                 return id.Key;
             }
             void Write(object obj)
@@ -274,6 +280,8 @@ namespace BinaryFormatDataStructure
                             else
                             {
                                 var record = ((BinaryObjectStringRecord)owner[memberNames[i]]);
+                                if (record.ObjectId == 0)
+                                    record.ObjectId = findId(record);
                                 record.Write(writer);
                                 serializedObjects[record.ObjectId] = record;
                             }

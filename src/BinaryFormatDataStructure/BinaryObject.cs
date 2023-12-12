@@ -7,11 +7,23 @@ namespace BinaryFormatDataStructure
 {
     public class BinaryObject: IReadOnlyDictionary<string, object>
     {
+        
         private readonly Dictionary<string, object> _members = new Dictionary<string, object>();
         
         public string TypeName { get; internal set; }
         public string AssemblyName { get; internal set; }
-        public object ReferenceObject { get; set; }
+     
+
+        public BinaryObject()
+        {
+
+        }
+        public BinaryObject(BinaryObject toClone)
+        {
+            this._members = new Dictionary<string, object>(toClone._members);
+            this.TypeName = toClone.TypeName;
+            this.AssemblyName = toClone.AssemblyName;
+        }
 
         public object this[string memberName] 
         {
@@ -57,6 +69,11 @@ namespace BinaryFormatDataStructure
         internal void AddMember(string memberName, object value)
         {
             _members[memberName] = value;
+        }
+
+        public BinaryObject Clone()
+        {
+            return new BinaryObject(this);
         }
     }
 }
