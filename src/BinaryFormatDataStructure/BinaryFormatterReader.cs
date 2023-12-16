@@ -22,18 +22,32 @@ namespace BinaryFormatDataStructure
             _reader = new BinaryReader(inputStream, Encoding.UTF8);
         }
 
+        public object Replace(object source, object destination)
+        {
+            var key = _objectTracker.Where(x => x.Value == source).FirstOrDefault().Key;
+            if (key > 0)
+            {
+                _objectTracker[key] = destination;
+            }
+            return destination;
+        }
         public static object ReadStream(Stream inputStream)
         {
             NRBFReader instance = new NRBFReader(inputStream);
             return instance.Parse();
         }
-
+        public int AddObject(BinaryObject obj)
+        {
+            int nid = _objectTracker.Max(x => x.Key) + 1;
+            _objectTracker[nid] = obj;
+            return nid;
+        }
         public void WriteStream(Stream outputStream)
         {
             BinaryWriter writer = new BinaryWriter(outputStream);
             writer.Write((byte)this.recordType);
             header.Write(writer);
-
+            bool needLoopSerialized = true;
             var serializedObjects = new Dictionary<int, object>();
             var serializedClasses = new Dictionary<string, int>();
             int findId(object obj)
@@ -47,10 +61,11 @@ namespace BinaryFormatDataStructure
                     }
                     return false;
                 });
-                if(id.Key != 0)
+                if (id.Key == 0)
                 {
-                    int nid = _objectTracker.Max(x => x.Key)+1;
+                    int nid = _objectTracker.Max(x => x.Key) + 1;
                     _objectTracker[nid] = obj;
+                    needLoopSerialized = true;
                     return nid;
                 }
                 return id.Key;
@@ -79,7 +94,7 @@ namespace BinaryFormatDataStructure
                     //Write Binary type
                     writer.Write((byte)BinaryType.Class);
                     //Write Class info
-                    BinaryObject b = (BinaryObject)o_arr.FirstOrDefault(x=>x!=null);
+                    BinaryObject b = (BinaryObject)o_arr.FirstOrDefault(x => x != null);
 
                     var classType = new ClassTypeInfo()
                     {
@@ -91,12 +106,12 @@ namespace BinaryFormatDataStructure
                     {
                         var countNull = 0;
                         int i;
-                        for (i = index;i<arr.Length && arr[i]==null;i++)
+                        for (i = index; i < arr.Length && arr[i] == null; i++)
                         {
                             countNull++;
                         }
                         index = i - 1;
-                        if(countNull==1)
+                        if (countNull == 1)
                         {
                             writer.Write((byte)RecordType.ObjectNull);
                         }
@@ -105,7 +120,7 @@ namespace BinaryFormatDataStructure
                             writer.Write((byte)RecordType.ObjectNullMultiple256);
                             writer.Write((byte)countNull);
                         }
-                        else 
+                        else
                         {
                             writer.Write((byte)RecordType.ObjectNullMultiple);
                             writer.Write((int)countNull);
@@ -302,11 +317,17 @@ namespace BinaryFormatDataStructure
                 writer.Write((byte)RecordType.BinaryLibrary);
                 BinaryLibraryRecord.Write(writer, o.Key, o.Value);
             }
-
-            foreach (var o in _objectTracker)
+            while (needLoopSerialized)
             {
-                if (!serializedObjects.ContainsKey(o.Key))
-                    Write(o.Value);
+                needLoopSerialized = false;
+                foreach (var o in new Dictionary<int, object>(_objectTracker))
+                {
+                    if (!serializedObjects.ContainsKey(o.Key))
+                    {
+                        Write(o.Value);
+                        serializedObjects[o.Key] = o.Value;
+                    }
+                }
             }
 
             writer.Write((byte)RecordType.MessageEnd);
@@ -1184,6 +1205,8 @@ namespace BinaryFormatDataStructure
 
             return result;
         }
+
+       
 
         private void CompleteDeferredItems()
         {

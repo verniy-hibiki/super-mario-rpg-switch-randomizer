@@ -18,5 +18,9 @@ namespace BinaryFormatDataStructure
             bw.Write(ObjectId);
             bw.Write(Value);
         }
+        public override string ToString()
+        {
+            return this.Value;
+        }
     }
 }
