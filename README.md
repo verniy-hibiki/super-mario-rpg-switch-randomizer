@@ -35,3 +35,19 @@ We added writer support in their code.
 
 You can support the creators via their twitch
 [Takstijn](https://twitch.tv/takstijn) [ObsidianMaker](https://twitch.tv/ObsidianMaker)
+
+# Modules
+| Module | Description |
+| ------ | ----------- |
+| INITIALIZE | Change the default stats of characters when unlocked (Can be combined with SPECIALS to randomize specials moves) |
+| SPECIALS | Change the characters SPECIALS moves, need LEVELUP or INITIALIZE to work |
+| EQUIP | Change who can wear/equip weapons/armor/amulets |
+| ITEMS | Change items stats, attack/defense |
+| ITEMS_PRICE | Change item price in shops |
+| TREASURE | Change the content of treasure chests |
+| LEVELUP | Change the stats character gets after leveling up |
+| ENCOUNTER | Change enemies encounters except story battles |
+| SHOP | Change which items are in shops |
+| CUTSCENES_R | Randomize cutscenes order |
+| CUTSCENES_S | Changes all cutscenes to the shortest one |
+| SHORT_TEXT | Change all character text to 'Tak' to have shorter text *Currently bugs out some part of the game |
