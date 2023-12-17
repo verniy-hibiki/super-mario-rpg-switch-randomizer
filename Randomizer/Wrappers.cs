@@ -472,7 +472,7 @@ namespace Randomizer
         public string m_file_id { get { return ((BinaryObjectStringRecord)data["m_file_id"])?.Value; } set { ((BinaryObjectStringRecord)data["m_file_id"]).Value = value; } }
         public Boolean m_is_serial { get { return (Boolean)data["m_is_serial"]; } set { data["m_is_serial"] = value; } }
         public Int32 m_revision { get { return (Int32)data["m_revision"]; } set { data["m_revision"] = value; } }
-        public MenuTextItem[] m_data { get { return ((object[])data["m_data"]).Select(x => new MenuTextItem((BinaryObject)x)).ToArray(); } }
+        public MenuTextItem?[] m_data { get { return ((object[])data["m_data"]).Select(x => x!=null? new MenuTextItem((BinaryObject)x):null).ToArray(); } }
     }
 
     public class MenuTextItem
