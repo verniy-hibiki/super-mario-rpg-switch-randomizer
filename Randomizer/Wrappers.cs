@@ -285,7 +285,7 @@ namespace Randomizer
 
     public class BattleMotionPlayerData
     {
-        readonly BinaryObject data;
+        public readonly BinaryObject data;
         public BattleMotionPlayerData(BinaryObject bo)
         {
             this.data = bo;
@@ -514,6 +514,19 @@ namespace Randomizer
         public Int32 _restoration { get { return (Int32)data["_restoration"]; } set { data["_restoration"] = value; } }
         public Int32 _treasure_id { get { return (Int32)data["_treasure_id"]; } set { data["_treasure_id"] = value; } }
     }
+    public class MonsterAITableData
+    {
+        readonly BinaryObject data;
+        public MonsterAITableData(BinaryObject bo)
+        {
+            this.data = bo;
+        }
+        public Int32 _table_id { get { return (Int32)data["_table_id"]; } set { data["_table_id"] = value; } }
+        public Int32[] _skill_ratio { get { return (Int32[])data["_skill_ratio"]; } set { data["_skill_ratio"] = value; } }
+        public Int32[] _skill_id { get { return (Int32[])data["_skill_id"]; } set { data["_skill_id"] = value; } }
+        public Int32 _character_id { get { return (Int32)data["_character_id"]; } set { data["_character_id"] = value; } }
+    }
+
 
 #pragma warning restore IDE1006 // Naming Styles
 

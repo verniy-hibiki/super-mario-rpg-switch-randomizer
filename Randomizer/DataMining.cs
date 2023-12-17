@@ -184,6 +184,13 @@ namespace Randomizer
     }
     class MONSTER
     {
+        public static int[] All
+        {
+            get
+            {
+                return typeof(MONSTER).GetFields(System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.GetField).Select(x => (int)x.GetValue(null)).ToArray();
+            }
+        }
         public static int Terrapin = 1;
         public static int Goomba = 2;
         public static int Paratroopa = 3;
@@ -422,6 +429,27 @@ namespace Randomizer
     }
     class ACTIONS
     {
+        public static int[] All
+        {
+            get
+            {
+                return typeof(ACTIONS).GetFields(System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.GetField).Select(x => (int)x.GetValue(null)).ToArray();
+            }
+        }
+        public static int[] Users
+        {
+            get
+            {
+                return All.Where(x => x < 130).ToArray();
+            }
+        }
+        public static int[] Enemies
+        {
+            get
+            {
+                return All.Where(x => x >500).ToArray();
+            }
+        }
         public static int Jump = 103;
         public static int Fireball = 104;
         public static int Super_Jump = 105;

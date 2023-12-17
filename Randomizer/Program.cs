@@ -24,6 +24,7 @@ namespace Randomizer
             public static string CUTSCENES_R = "CUTSCENES_R";
             public static string CUTSCENES_S = "CUTSCENES_S";
             public static string SHORT_TEXT = "SHORT_TEXT";
+            public static string MONSTER_SKILL = "MONSTER_SKILL";
         }
         static readonly Dictionary<string, bool> modules = new()
         {
@@ -39,6 +40,7 @@ namespace Randomizer
             { MODULES.CUTSCENES_R, false },
             { MODULES.CUTSCENES_S, false },
             { MODULES.SHORT_TEXT, false },
+            { MODULES.MONSTER_SKILL, false },
         };
         static readonly Dictionary<string, TBLFile> files = new();
         static readonly Random r = new();
@@ -172,7 +174,7 @@ namespace Randomizer
             var non_randomizable_battles = event_battles.SelectMany(x => ((int[])x["_encount_ptn_id"])).Distinct().ToList();
             //var randomizable_montsters = encounters.Where(item => !non_randomizable_battles.Contains((int)item["_encount_pattern_id"]))
             //                                   .SelectMany(item => (int[])(int[])item["_monster_id"]).Distinct().ToList();
-            var randomizable_montsters = monsters.Select(x => (int)x["_character_id"]).Where(x => x < 1500).ToList();
+            var randomizable_montsters = monsters.Select(x => (int)x["_character_id"]).Where(x => x < 1500 && x != MONSTER.Dry_Bones).ToList();
 
             if (modules[MODULES.ENCOUNTER])
             {
@@ -195,6 +197,7 @@ namespace Randomizer
                 //}
                 foreach (var item in monsters)
                 {
+                    var mon = new MonsterData(item);
                     item["_is_drop_100per"] = true;
                     item["_drop_item_id_1"] = all_items.OrderBy(x => r.Next()).First();
                     item["_drop_item_id_2"] = all_items.OrderBy(x => r.Next()).First();
@@ -446,7 +449,7 @@ namespace Randomizer
                     {
                         var prev_value = (int)item.data[stat];
                         item.data[stat] = Math.Max(10, Math.Max(prev_value - 5, (int)(prev_value * (Random() + 0.25))));
-                       
+
                     }
 
                     item._possession_limit_easy = 100;// Math.Max(2, (int)((int)item["_possession_limit_easy"] * (Random())));
@@ -517,14 +520,14 @@ namespace Randomizer
         {
             var file = RequestFile("treasure_box");
             var result = file.Wrap<TreasureHuntBoxData>();
-            var possible_0_value = result.Where(x => (int)x._treasure_type == 0).Select(x => (int)x._treasure_value).Distinct();
-            var possible_1_value = result.Where(x => (int)x._treasure_type == 1).Select(x => (int)x._treasure_value).Distinct();
-            var possible_2_value = result.Where(x => (int)x._treasure_type == 2).Select(x => (int)x._treasure_value).Distinct();
-            var possible_3_value = result.Where(x => (int)x._treasure_type == 3).Select(x => (int)x._treasure_value).Distinct();
-            var possible_4_value = result.Where(x => (int)x._treasure_type == 4).Select(x => (int)x._treasure_value).Distinct();
-            var possible_5_value = result.Where(x => (int)x._treasure_type == 5).Select(x => (int)x._treasure_value).Distinct();
-            var possible_6_value = result.Where(x => (int)x._treasure_type == 6).Select(x => (int)x._treasure_value).Distinct();
-            var possible_7_value = result.Where(x => (int)x._treasure_type == 7).Select(x => (int)x._treasure_value).Distinct();
+            var possible_0_value = result.Where(x => (int)x._treasure_type == 0).Select(x => (int)x._treasure_value).Distinct().ToArray();
+            var possible_1_value = result.Where(x => (int)x._treasure_type == 1).Select(x => (int)x._treasure_value).Distinct().ToArray();
+            var possible_2_value = result.Where(x => (int)x._treasure_type == 2).Select(x => (int)x._treasure_value).Distinct().ToArray();
+            var possible_3_value = result.Where(x => (int)x._treasure_type == 3).Select(x => (int)x._treasure_value).Distinct().ToArray();
+            var possible_4_value = result.Where(x => (int)x._treasure_type == 4).Select(x => (int)x._treasure_value).Distinct().ToArray();
+            var possible_5_value = result.Where(x => (int)x._treasure_type == 5).Select(x => (int)x._treasure_value).Distinct().ToArray();
+            var possible_6_value = result.Where(x => (int)x._treasure_type == 6).Select(x => (int)x._treasure_value).Distinct().ToArray();
+            var possible_7_value = result.Where(x => (int)x._treasure_type == 7).Select(x => (int)x._treasure_value).Distinct().ToArray();
             var possible_new_types = new int[] { 1, 2, 3, 7 };
             var possible_values = new[] { possible_0_value, all_items, possible_2_value, possible_3_value, possible_4_value, possible_5_value, possible_6_value, possible_7_value };
             var resetTypes = result.Select(x => x._reset_type).Distinct().ToList();
@@ -705,9 +708,59 @@ namespace Randomizer
             }
 
         }
+        public static void RandomizeMonsterAttacks()
+        {
+            if (!modules[MODULES.MONSTER_SKILL]) return;
 
+            var monsters_file = RequestFile("monster");
+            var monsters_ai_file = RequestFile("monster_ai");
+            var motion_file = RequestFile("battle_motion_monster");
+            var monsters = monsters_file.Wrap<MonsterData>();
+            var monsters_ai = monsters_ai_file.Wrap<MonsterAITableData>();
+            var motions = motion_file.Wrap<BattleMotionPlayerData>();
+
+            foreach (var monster in monsters)
+            {
+                monster._fp = Math.Max(50,monster._fp);
+            }
+            foreach (var monster in monsters_ai)
+            {
+                if (monster._character_id >= 1000 && monster._character_id < 1500)//To avoid bosses
+                {
+                    var skills = monster._skill_id.Where(x => x > 1).ToList();//1 is melee
+                    if (skills.Count > 0)
+                    {
+                        for (var i = 0; i < monster._skill_id.Length; i++)
+                        {
+                            if (monster._skill_id[i] > 0)
+                            {
+                                var newSkill = ACTIONS.Enemies.OrderBy(x=>r.Next()).First();
+                                monster._skill_id[i] = newSkill;
+
+                                var firstSkillForPlayer = motions
+                         .Where(x => (int)x._player_id == monster._character_id && (int)x._skill_id != 1 && (int)x._weapon_id == 0).FirstOrDefault()?._skill_id ?? 0;
+
+                                var firstAnimation = motions
+                          .Where(x => (int)x._player_id == monster._character_id && (int)x._skill_id == firstSkillForPlayer && (int)x._weapon_id == 0).ToList();
+
+                                foreach (var animPart in firstAnimation.Select(x => x.data.Clone()))
+                                {
+                                    animPart["_skill_id"] = newSkill;
+                                    motion_file.WorkSet.Add(animPart);
+                                    motion_file.Reader?.AddObject(animPart);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
         public static void Test()
         {
+            var file_to_generate = RequestFile("pc_position");
+            var bo = file_to_generate.WorkSet.FirstOrDefault(x => x != null);
+            var clz = CreateWrapper(file_to_generate, bo.TypeName);
+
             //foreach (var kv in files)
             //{
             //    var bo = kv.Value.WorkSet.FirstOrDefault(x => x != null);
@@ -726,12 +779,13 @@ namespace Randomizer
             var data = file.Wrap<TreasureHuntDisappearData>().ToList();
             foreach (TreasureHuntDisappearData treasure in data)
             {
-                if(treasure._kind_id == 1)
+                if (treasure._kind_id == 1)
                 {
                     int k = 3;
                 }
-                if (treasure._kind_id == 6 || treasure._needs_any_script)
+                if (treasure._kind_id == 6 /*|| treasure._needs_any_script*/)
                     continue;
+                treasure._needs_any_script = false;
                 /**
                  * 1 = Coin
                  * 2 = frog coin
@@ -740,7 +794,7 @@ namespace Randomizer
                  * 5 = an item, use _item_id to set 
                  * 6 = item + management + script? (Always item 87)
                  */
-                treasure._kind_id = (new int[] { 1,2,3,4,5 }).OrderBy(x => r.Next()).First();
+                treasure._kind_id = (new int[] { 1, 2, 3, 4, 5 }).OrderBy(x => r.Next()).First();
                 //treasure._is_frog_coin = treasure._kind_id == 2;
                 //treasure._is_mushroom = treasure._kind_id == 3;
                 //treasure._is_flower = treasure._kind_id == 4;
@@ -764,7 +818,10 @@ namespace Randomizer
 
 
             }
-            var set = file.WorkSet;
+
+            var file2 = RequestFile("treasure_box");
+            var boxes = file2.Wrap<TreasureHuntBoxData>();
+
         }
         public static void Main(string[] args)
         {
@@ -785,6 +842,7 @@ namespace Randomizer
             RandomizeEncounter();
             RandomizeShop();
             RandomizeUnlocks();
+            RandomizeMonsterAttacks();
             CreateMissingAnimations();
 
             //RandomizeCutscenes();
