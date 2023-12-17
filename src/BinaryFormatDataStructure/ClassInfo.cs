@@ -3,7 +3,7 @@ using System.IO;
 
 namespace BinaryFormatDataStructure
 {
-    internal class ClassInfo
+    public class ClassInfo
     {
         public int ObjectId { get; internal set; }
         public string Name { get; internal set; }

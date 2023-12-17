@@ -1,6 +1,6 @@
 ﻿namespace BinaryFormatDataStructure
 {
-    internal enum BinaryType : byte
+    public enum BinaryType : byte
     {
         Primitive = 0, // The Remoting Type is defined in PrimitiveTypeEnumeration and the Remoting Type is not a string.
         String = 1, // The Remoting Type is a LengthPrefixedString.

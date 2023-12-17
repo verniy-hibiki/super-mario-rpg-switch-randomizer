@@ -3,7 +3,7 @@ using System.IO;
 
 namespace BinaryFormatDataStructure
 {
-    internal class MemberTypeInfo
+    public class MemberTypeInfo
     {
         public BinaryType[] BinaryType { get; internal set; }
         public object[] AdditionalInfos { get; internal set; }

@@ -3,7 +3,7 @@ using System.IO;
 
 namespace BinaryFormatDataStructure
 {
-    internal class ClassWithMembersAndTypesRecord : ClassSerializationRecord
+    public class ClassWithMembersAndTypesRecord : ClassSerializationRecord
     {
         public int LibraryId { get; internal set; }
 

@@ -40,6 +40,7 @@ namespace Randomizer
             { MODULES.CUTSCENES_S, false },
             { MODULES.SHORT_TEXT, false },
         };
+        static readonly Dictionary<string, TBLFile> files = new();
         static readonly Random r = new();
         static double danger = 1;
         static double danger_offset = +0.5;
@@ -70,6 +71,27 @@ namespace Randomizer
         {
             return r.NextDouble() * danger + danger_offset;
         }
+        public static TBLFile RequestFile(string name)
+        {
+            if (files.ContainsKey(name))
+            {
+                return files[name];
+            }
+            var path = base_path + name + ".tbl";
+            var destination = dest_path + name + ".tbl";
+            using (var stream = File.OpenRead(path))
+            {
+                var reader = new NRBFReader(stream);
+                var messages = ((Object[])reader.Parse());
+                files[name] = new TBLFile()
+                {
+                    Content = messages,
+                    Reader = reader,
+                    Destination = destination
+                };
+            }
+            return files[name];
+        }
         public static void Watermark(string? language = null)
         {
             if (language == null)
@@ -79,41 +101,28 @@ namespace Randomizer
                 Watermark("lang/menu_text_esp");
                 return;
             }
-            var file = language;
-            var path = base_path + file + ".tbl";
-            var destination = dest_path + file + ".tbl";
+            var file = RequestFile(language);
 
-            NRBFReader reader1;
-            BinaryObject[] messages;
-
-            using (var stream = File.OpenRead(path))
+            foreach (var menu in file.Wrap<MenuTextData>())
             {
-                reader1 = new NRBFReader(stream);
-                messages = ((Object[])reader1.Parse()).Select(x => (BinaryObject)x).ToArray();
-            }
-
-            foreach (var menu in messages)
-            {
-                object[] items = (object[])menu["m_data"];
+                var items = menu.m_data;
                 foreach (var item in items)
                 {
                     if (item != null)
                     {
-                        BinaryObject obj = (BinaryObject)item;
-                        BinaryObjectStringRecord str = (BinaryObjectStringRecord)obj["m_text"];
-                        if (((int)obj["m_id"] == 2706) && (((BinaryObjectStringRecord)menu["m_file_id"]).Value == "040_command_menu"))
+                        if ((item.m_id == 2706) && menu.m_file_id == "040_command_menu")
                         {
-                            str.Value = "Randomized Mario RPG by takstijn and friends";
+                            item.m_text = "Randomized Mario RPG by takstijn and friends";
                         }
-                        if (((int)obj["m_id"] == 2707) && (((BinaryObjectStringRecord)menu["m_file_id"]).Value == "040_command_menu"))
+                        if ((item.m_id == 2707) && menu.m_file_id == "040_command_menu")
                         {
-                            str.Value = "Randomized Mario RPG by takstijn and friends";
+                            item.m_text = "Randomized Mario RPG by takstijn and friends";
                         }
-                        if (((int)obj["m_id"] == 2715) && (((BinaryObjectStringRecord)menu["m_file_id"]).Value == "040_command_menu"))
+                        if ((item.m_id == 2715) && menu.m_file_id == "040_command_menu")
                         {
-                            str.Value = "New Randomized game";
+                            item.m_text = "New Randomized game";
                         }
-                        if (str.Value == "Save")
+                        if (item.m_text == "Save")
                         {
                             //int i = 0;
                         }
@@ -122,9 +131,6 @@ namespace Randomizer
                 }
 
             }
-            System.IO.File.Delete(destination);
-            using var stream_o = File.OpenWrite(destination);
-            reader1.WriteStream(stream_o);
 
         }
         public static void ShortenLanguage(string? language = null)
@@ -137,64 +143,30 @@ namespace Randomizer
                 ShortenLanguage("lang/message_esp");
                 return;
             }
-            var file = language;
-            var path = base_path + file + ".tbl";
-            var destination = dest_path + file + ".tbl";
+            var file = RequestFile(language);
 
-            NRBFReader reader1;
-            BinaryObject[] messages;
-
-            using (var stream = File.OpenRead(path))
+            static bool IsReplaceable(string str)
             {
-                reader1 = new NRBFReader(stream);
-                messages = ((Object[])reader1.Parse()).Select(x => (BinaryObject)x).ToArray();
+                return str.All(x => char.IsLetter(x) || char.IsPunctuation(x) || char.IsWhiteSpace(x));
             }
-
-            foreach (var charac in messages)
+            File.Delete("tr.txt");
+            foreach (var charac in file.Wrap<MessageData>())
             {
-                BinaryObjectStringRecord str = (BinaryObjectStringRecord)charac["m_text"];
-                str.Value = "Tak";
+                if (IsReplaceable(charac.m_text))
+                    charac.m_text = "Tak";
+                File.AppendAllLines("tr.txt", new string[] { charac.m_text + " |||||" });
             }
-            System.IO.File.Delete(destination);
-            using var stream_o = File.OpenWrite(destination);
-            reader1.WriteStream(stream_o);
-
         }
         public static void RandomizeEncounter()
         {
-            var file3 = "encounter";
-            var file2 = "encounter_pattern";
-            var file = "monster";
-            var path = base_path + file + ".tbl";
-            var path2 = base_path + file2 + ".tbl";
-            var path3 = base_path + file3 + ".tbl";
-            var destination = dest_path + file + ".tbl";
-            var destination2 = dest_path + file2 + ".tbl";
-            var destination3 = dest_path + file3 + ".tbl";
+            var file3 = RequestFile("encounter");
+            var file2 = RequestFile("encounter_pattern");
+            var file = RequestFile("monster");
 
-            NRBFReader reader1, reader2, reader3;
-            BinaryObject[] monsters, encounters, monsters_ori, encounters_meta;
-
-            using (var stream = File.OpenRead(path))
-            {
-                reader1 = new NRBFReader(stream);
-                monsters_ori = ((Object[])reader1.Parse()).Select(x => (BinaryObject)x).ToArray();
-            }
-            using (var stream = File.OpenRead(path))
-            {
-                reader1 = new NRBFReader(stream);
-                monsters = ((Object[])reader1.Parse()).Select(x => (BinaryObject)x).ToArray();
-            }
-            using (var stream = File.OpenRead(path2))
-            {
-                reader2 = new NRBFReader(stream);
-                encounters = ((Object[])reader2.Parse()).Select(x => (BinaryObject)x).ToArray();
-            }
-            using (var stream = File.OpenRead(path3))
-            {
-                reader3 = new NRBFReader(stream);
-                encounters_meta = ((Object[])reader3.Parse()).Select(x => (BinaryObject)x).ToArray();
-            }
+            BinaryObject[] monsters_ori = file.WorkSet.Select(x => x.Clone()).ToArray();
+            BinaryObject[] monsters = file.WorkSet.ToArray();
+            BinaryObject[] encounters = file2.WorkSet.ToArray();
+            BinaryObject[] encounters_meta = file3.WorkSet.ToArray();
 
             var event_battles = encounters_meta.Where(x => (bool)x["_is_event_battle"]).ToList();
             var non_randomizable_battles = event_battles.SelectMany(x => ((int[])x["_encount_ptn_id"])).Distinct().ToList();
@@ -276,54 +248,32 @@ namespace Randomizer
                     }
                 }
             }
-
-            System.IO.File.Delete(destination);
-            using (var stream_o = File.OpenWrite(destination))
-            {
-                reader1.WriteStream(stream_o);
-            }
-            System.IO.File.Delete(destination2);
-            using (var stream_o = File.OpenWrite(destination2))
-            {
-                reader2.WriteStream(stream_o);
-            }
-            System.IO.File.Delete(destination3);
-            using (var stream_o = File.OpenWrite(destination3))
-            {
-                reader3.WriteStream(stream_o);
-            }
         }
         public static void RandomizeCharacterInitialStats()
         {
-            var file = "player_initialize";
-            var path = base_path + file + ".tbl";
-            var destination = dest_path + file + ".tbl";
+            var file = RequestFile("player_initialize");
 
-            using (var stream = File.OpenRead(path))
+            var result = file.WorkSet;
+            if (modules[MODULES.INITIALIZE])
             {
-                var reader = new NRBFReader(stream);
-                var result = ((Object[])reader.Parse()).Select(x => (BinaryObject)x).ToArray();
-
-                if (modules[MODULES.INITIALIZE])
+                Console.WriteLine("Randomizing players initial stats");
+                foreach (var item in result)
                 {
-                    Console.WriteLine("Randomizing players initial stats");
-                    foreach (var item in result)
-                    {
-                        var stats = new string[] { "_hp","_attack",
+                    var stats = new string[] { "_hp","_attack",
                         "_defence","_magic_attack","_magic_defence","_speeed"
                     };
-                        foreach (var stat in stats)
-                        {
-                            item[stat] = Math.Max(1, (int)((int)item[stat] * (Random())));
-                        }
-                        var skills = (int[])item["_learned_skill_id"];
+                    foreach (var stat in stats)
+                    {
+                        item[stat] = Math.Max(1, (int)((int)item[stat] * (Random())));
+                    }
+                    var skills = (int[])item["_learned_skill_id"];
 
-                        item["_armor"] = (int)(new int[] { 0, 0, 0, ITEM.Lazy_Shell_armor, ITEM.Lovely_Dress }.OrderBy(x => r.Next()).First());
-                        item["_weapon"] = (int)(new int[] { 0, 0, 0, ITEM.Slap_Glove, ITEM.Lucky_Hammer }.OrderBy(x => r.Next()).First());
+                    item["_armor"] = (int)(new int[] { 0, 0, 0, ITEM.Lazy_Shell_armor, ITEM.Lovely_Dress }.OrderBy(x => r.Next()).First());
+                    item["_weapon"] = (int)(new int[] { 0, 0, 0, ITEM.Slap_Glove, ITEM.Lucky_Hammer }.OrderBy(x => r.Next()).First());
 
-                        if (modules[MODULES.SPECIALS])
-                        {
-                            var learnableSkills = new int[] { /*0, 103, 109, 111, 115, 120,*/
+                    if (modules[MODULES.SPECIALS])
+                    {
+                        var learnableSkills = new int[] { /*0, 103, 109, 111, 115, 120,*/
                                 0,0,0,0,0,
                                Randomizer.ACTIONS.Jump,
                                Randomizer.ACTIONS.HP_Rain,
@@ -334,19 +284,14 @@ namespace Randomizer
                                Randomizer.ACTIONS.Mega_Recover,
                                Randomizer.ACTIONS.Geno_Beam,
                                Randomizer.ACTIONS.Group_Hug,};
-                            var new_skiils = learnableSkills.OrderBy(x => r.Next()).Take(2).ToList();
-                            skills[0] = new_skiils[0];
-                            skills[1] = new_skiils[1];
+                        var new_skiils = learnableSkills.OrderBy(x => r.Next()).Take(2).ToList();
+                        skills[0] = new_skiils[0];
+                        skills[1] = new_skiils[1];
 
-                            all_skills[(int)item["_chara_id"]].AddRange(new_skiils);
-                        }
+                        all_skills[(int)item["_chara_id"]].AddRange(new_skiils);
                     }
                 }
-
-                System.IO.File.Delete(destination);
-                using var stream_o = File.OpenWrite(destination);
-                reader.WriteStream(stream_o);
-            };
+            }
 
         }
         public static void RandomizeCharacterLevelUp()
@@ -386,172 +331,139 @@ namespace Randomizer
         }
         public static void RandomizeCharacterLevelUp(string character, List<int> learnableSkill, int player_id)
         {
-            var file = "/levelup_" + character;
-            var path = base_path + file + ".tbl";
-            var destination = dest_path + file + ".tbl";
-
-            using (var stream = File.OpenRead(path))
+            var file = RequestFile("/levelup_" + character);
+            var result = file.WorkSet;
+            if (modules[MODULES.LEVELUP])
             {
-                var reader = new NRBFReader(stream);
-                var result = ((Object[])reader.Parse()).Select(x => (BinaryObject)x).ToArray();
-
-                if (modules[MODULES.LEVELUP])
+                BinaryObject? previous = null;
+                Console.WriteLine("Randomizing players level up for " + character);
+                foreach (var item in result.Skip(1))
                 {
-                    BinaryObject? previous = null;
-                    Console.WriteLine("Randomizing players level up for " + character);
-                    foreach (var item in result.Skip(1))
-                    {
-                        var stats = new string[] { "_hp", "_hp_bonus", "_attack", "_attack_bonus",
+                    var stats = new string[] { "_hp", "_hp_bonus", "_attack", "_attack_bonus",
                         "_magic_attack","_magic_attack_bonus","_defence",
                         "_defence_bonus","_magic_defence","_magic_defence_bonus"
                     };
-                        foreach (var stat in stats)
+                    foreach (var stat in stats)
+                    {
+                        item[stat] = (int)((int)item[stat] * (Random()));
+                        if (previous != null)
                         {
-                            item[stat] = (int)((int)item[stat] * (Random()));
-                            if (previous != null)
-                            {
-                                //Prevent too big of debuff
-                                item[stat] = Math.Max((int)previous[stat] - 10, (int)item[stat]);
-                            }
+                            //Prevent too big of debuff
+                            item[stat] = Math.Max((int)previous[stat] - 10, (int)item[stat]);
                         }
-                        if (modules[MODULES.SPECIALS])
-                        {
-                            if ((int)item["_learn_skill"] > 0)
-                            {
-                                var newSkill = learnableSkill.OrderBy(x => r.Next()).First();
-                                item["_learn_skill"] = newSkill;
-                                all_skills[player_id].Add(newSkill);
-                            }
-                        }
-                        previous = item;
                     }
+                    if (modules[MODULES.SPECIALS])
+                    {
+                        if ((int)item["_learn_skill"] > 0)
+                        {
+                            var newSkill = learnableSkill.OrderBy(x => r.Next()).First();
+                            item["_learn_skill"] = newSkill;
+                            all_skills[player_id].Add(newSkill);
+                        }
+                    }
+                    previous = item;
                 }
+            }
 
-                System.IO.File.Delete(destination);
-                using var stream_o = File.OpenWrite(destination);
-                reader.WriteStream(stream_o);
-            };
 
         }
         public static void ReadCharacterLevelUp(string character, List<int> learnableSkill)
         {
-            var file = "/levelup_" + character;
-            var path = base_path + file + ".tbl";
-            var destination = dest_path + file + ".tbl";
-
-            using (var stream = File.OpenRead(path))
+            var file = RequestFile("/levelup_" + character);
+            var result = file.WorkSet;
+            if (modules[MODULES.LEVELUP])
             {
-                var reader = new NRBFReader(stream);
-                var result = ((Object[])reader.Parse()).Select(x => (BinaryObject)x).ToArray();
-
-                if (modules[MODULES.LEVELUP])
+                foreach (var item in result.Skip(1))
                 {
-                    foreach (var item in result.Skip(1))
-                    {
-                        learnableSkill.Add((int)item["_learn_skill"]);
-                    }
+                    learnableSkill.Add((int)item["_learn_skill"]);
                 }
-            };
-
+            }
         }
         public static void RandomizeItems()
         {
-            var file = "stella_item_list";
-            var path = base_path + file + ".tbl";
-            var destination = dest_path + file + ".tbl";
-
-            using (var stream = File.OpenRead(path))
+            var file = RequestFile("stella_item_list");
+            var result = file.Wrap<ItemData>();
+            var items = new List<int>();
+            all_items = items;
+            if (modules[MODULES.EQUIP])
             {
-                var reader = new NRBFReader(stream);
-                var result = ((Object[])reader.Parse()).Select(x => (BinaryObject)x).ToArray();
-                var items = new List<int>();
-                all_items = items;
+                Console.WriteLine("Randomizing who can equip items");
+            }
+            if (modules[MODULES.ITEMS])
+            {
+                Console.WriteLine("Randomizing items stats");
+            }
+            foreach (var item in result)
+            {
+                items.Add(item._item_id);
+
+
                 if (modules[MODULES.EQUIP])
                 {
-                    Console.WriteLine("Randomizing who can equip items");
+                    //_can_equip_mario,_can_equip_mallow,_can_equip_geno,_can_equip_kupper,_can_equip_peach
+                    var _can_equip_mario = (bool)item._can_equip_mario;
+                    var _can_equip_mallow = (bool)item._can_equip_mallow;
+                    var _can_equip_geno = (bool)item._can_equip_geno;
+                    var _can_equip_kupper = (bool)item._can_equip_kupper;
+                    var _can_equip_peach = (bool)item._can_equip_peach;
+                    var is_equipable = _can_equip_mario || _can_equip_mallow || _can_equip_geno || _can_equip_kupper || _can_equip_peach;
+                    if (is_equipable)
+                    {
+                        var equipable = new bool[] { false, false, false, false, false };
+
+                        while (!equipable.Any(x => x))
+                            equipable = equipable.Select(x => r.NextDouble() > 0.5).ToArray();
+
+                        item._can_equip_mario = (bool)equipable[0];
+                        item._can_equip_mallow = (bool)equipable[1];
+                        item._can_equip_geno = (bool)equipable[2];
+                        item._can_equip_kupper = (bool)equipable[3];
+                        item._can_equip_peach = (bool)equipable[4];
+                    }
+                    if ((int)item._equip_kind_id == 1)
+                        shop_weapons.Add((int)item._item_id);
+                }
+                if (modules[MODULES.ITEMS_PRICE])
+                {
+                    item._buy_price = (int)((int)item._buy_price * (Random()));
+                    //item["_buy_price"] = 1;
+                    item._buy_price_alto = (int)((int)item._buy_price_alto * (Random()));
+                    item._buy_price_tenor = (int)((int)item._buy_price_tenor * (Random()));
+                    item._buy_price_soprano = (int)((int)item._buy_price_soprano * (Random()));
+                    item._sell_price = (int)((int)item._sell_price * (Random()));
+                    //item["_sell_price"] = 100;
+                    item._kaeru_coin_price = (int)((int)item._kaeru_coin_price * (Random()));
+                    item._point_buy_price = (int)((int)item._point_buy_price * (Random()));
+                    item._point_sell_price = (int)((int)item._point_sell_price * (Random()));
+                }
+                if ((int)item._explain_id > 0 && (int)item._buy_price > 0)
+                {
+                    shop_items.Add((int)item._item_id);
                 }
                 if (modules[MODULES.ITEMS])
                 {
-                    Console.WriteLine("Randomizing items stats");
+                    foreach (var stat in new string[] { "_speed", "_attack", "_magic_attack", "_defense", "_magic_defense" })
+                    {
+                        var prev_value = (int)item.data[stat];
+                        item.data[stat] = Math.Max(10, Math.Max(prev_value - 5, (int)(prev_value * (Random() + 0.25))));
+                       
+                    }
+
+                    item._possession_limit_easy = 100;// Math.Max(2, (int)((int)item["_possession_limit_easy"] * (Random())));
+                    item._possession_limit_normal = 100;// Math.Max(2, (int)((int)item["_possession_limit_normal"] * (Random())));
                 }
-                foreach (var item in result)
-                {
-                    items.Add((int)item["_item_id"]);
+                if ((bool)item._can_equip_mario)
+                    all_equipable[1].Add((int)item._item_id);
+                if ((bool)item._can_equip_mario)
+                    all_equipable[2].Add((int)item._item_id);
+                if ((bool)item._can_equip_mario)
+                    all_equipable[3].Add((int)item._item_id);
+                if ((bool)item._can_equip_mario)
+                    all_equipable[4].Add((int)item._item_id);
+                if ((bool)item._can_equip_mario)
+                    all_equipable[5].Add((int)item._item_id);
+            }
 
-
-                    if (modules[MODULES.EQUIP])
-                    {
-                        //_can_equip_mario,_can_equip_mallow,_can_equip_geno,_can_equip_kupper,_can_equip_peach
-                        var _can_equip_mario = (bool)item["_can_equip_mario"];
-                        var _can_equip_mallow = (bool)item["_can_equip_mallow"];
-                        var _can_equip_geno = (bool)item["_can_equip_geno"];
-                        var _can_equip_kupper = (bool)item["_can_equip_kupper"];
-                        var _can_equip_peach = (bool)item["_can_equip_peach"];
-                        var is_equipable = _can_equip_mario || _can_equip_mallow || _can_equip_geno || _can_equip_kupper || _can_equip_peach;
-                        if (is_equipable)
-                        {
-                            var equipable = new bool[] { false, false, false, false, false };
-
-                            while (!equipable.Any(x => x))
-                                equipable = equipable.Select(x => r.NextDouble() > 0.5).ToArray();
-
-                            item["_can_equip_mario"] = (bool)equipable[0];
-                            item["_can_equip_mallow"] = (bool)equipable[1];
-                            item["_can_equip_geno"] = (bool)equipable[2];
-                            item["_can_equip_kupper"] = (bool)equipable[3];
-                            item["_can_equip_peach"] = (bool)equipable[4];
-                        }
-                        if ((int)item["_equip_kind_id"] == 1)
-                            shop_weapons.Add((int)item["_item_id"]);
-                    }
-                    if (modules[MODULES.ITEMS_PRICE])
-                    {
-                        item["_buy_price"] = (int)((int)item["_buy_price"] * (Random()));
-                        //item["_buy_price"] = 1;
-                        item["_buy_price_alto"] = (int)((int)item["_buy_price_alto"] * (Random()));
-                        item["_buy_price_tenor"] = (int)((int)item["_buy_price_tenor"] * (Random()));
-                        item["_buy_price_soprano"] = (int)((int)item["_buy_price_soprano"] * (Random()));
-                        item["_sell_price"] = (int)((int)item["_sell_price"] * (Random()));
-                        //item["_sell_price"] = 100;
-                        item["_kaeru_coin_price"] = (int)((int)item["_kaeru_coin_price"] * (Random()));
-                        item["_point_buy_price"] = (int)((int)item["_point_buy_price"] * (Random()));
-                        item["_point_sell_price"] = (int)((int)item["_point_sell_price"] * (Random()));
-                    }
-                    if ((int)item["_explain_id"] > 0 && (int)item["_buy_price"] > 0)
-                    {
-                        shop_items.Add((int)item["_item_id"]);
-                    }
-                    if (modules[MODULES.ITEMS])
-                    {
-                        foreach (var stat in new string[] { "_speed", "_attack", "_magic_attack", "_defense", "_magic_defense" })
-                        {
-                            var prev_value = (int)item[stat];
-                            item[stat] = Math.Max(10, Math.Max(prev_value - 5, (int)(prev_value * (Random() + 0.25))));
-                            if (stat == "_attack" && (int)item["_equip_kind_id"] == 1)
-                            {
-                                item[stat] = (int)((int)item[stat] * 1.75);//Since weapons can't crit if they are on the wrong character
-                            }
-                        }
-
-                        item["_possession_limit_easy"] = 100;// Math.Max(2, (int)((int)item["_possession_limit_easy"] * (Random())));
-                        item["_possession_limit_normal"] = 100;// Math.Max(2, (int)((int)item["_possession_limit_normal"] * (Random())));
-                    }
-                    if ((bool)item["_can_equip_mario"])
-                        all_equipable[1].Add((int)item["_item_id"]);
-                    if ((bool)item["_can_equip_mario"])
-                        all_equipable[2].Add((int)item["_item_id"]);
-                    if ((bool)item["_can_equip_mario"])
-                        all_equipable[3].Add((int)item["_item_id"]);
-                    if ((bool)item["_can_equip_mario"])
-                        all_equipable[4].Add((int)item["_item_id"]);
-                    if ((bool)item["_can_equip_mario"])
-                        all_equipable[5].Add((int)item["_item_id"]);
-                }
-
-                System.IO.File.Delete(destination);
-                using var stream_o = File.OpenWrite(destination);
-                reader.WriteStream(stream_o);
-            };
         }
         public static void RandomizeShop(string? shop = null)
         {
@@ -562,125 +474,91 @@ namespace Randomizer
                 RandomizeShop("pickup_shop");
                 return;
             }
-            var file = shop;
-            var path = base_path + file + ".tbl";
-            var destination = dest_path + file + ".tbl";
-
-            using (var stream = File.OpenRead(path))
+            var file = RequestFile(shop);
+            var result = file.WorkSet;
+            if (modules[MODULES.SHOP])
             {
-                var reader = new NRBFReader(stream);
-                var result = ((Object[])reader.Parse()).Select(x => (BinaryObject)x).ToArray();
-                if (modules[MODULES.SHOP])
-                {
-                    Console.WriteLine("Randomizing shops");
-                }
+                Console.WriteLine("Randomizing shops");
+            }
 
-                foreach (var item in result)
+            foreach (var item in result)
+            {
+                int[] items_for_sale = (int[])item["_item_id"];
+                for (int i = 0; i < items_for_sale.Length; i++)
                 {
-                    int[] items_for_sale = (int[])item["_item_id"];
-                    for (int i = 0; i < items_for_sale.Length; i++)
-                    {
-                        items_for_sale[i] = shop_items.OrderBy(x => r.Next()).First();
-                    }
+                    items_for_sale[i] = shop_items.OrderBy(x => r.Next()).First();
                 }
+            }
 
-                System.IO.File.Delete(destination);
-                using var stream_o = File.OpenWrite(destination);
-                reader.WriteStream(stream_o);
-            };
         }
 
         public static void RandomizeUnlocks()
         {
-            var file = "event_status";
-            var path = base_path + file + ".tbl";
-            var destination = dest_path + file + ".tbl";
-
-            using (var stream = File.OpenRead(path))
+            var file = RequestFile("event_status");
+            var result = file.WorkSet;
+            var unlocks = result.Where(x => (int)x["_party_num"] > 0).Distinct().ToArray();
+            foreach (var item in result)
             {
-                var reader = new NRBFReader(stream);
-                var result = ((Object[])reader.Parse()).Select(x => (BinaryObject)x).ToArray();
+                //_bounus_hp
+                var bonus_hp = (bool[])item["_bounus_hp"];
+                for (var i = 0; i < bonus_hp.Length; i++) bonus_hp[i] = true;
+                var bonus_pow = (bool[])item["_bounus_pow"];
+                for (var i = 0; i < bonus_pow.Length; i++) bonus_pow[i] = true;
+                var bonus_s = (bool[])item["_bounus_s"];
+                for (var i = 0; i < bonus_s.Length; i++) bonus_s[i] = true;
 
-                var unlocks = result.Where(x => (int)x["_party_num"] > 0).Distinct().ToArray();
-                foreach (var item in result)
-                {
-                    //_bounus_hp
-                    var bonus_hp = (bool[])item["_bounus_hp"];
-                    for (var i = 0; i < bonus_hp.Length; i++) bonus_hp[i] = true;
-                    var bonus_pow = (bool[])item["_bounus_pow"];
-                    for (var i = 0; i < bonus_pow.Length; i++) bonus_pow[i] = true;
-                    var bonus_s = (bool[])item["_bounus_s"];
-                    for (var i = 0; i < bonus_s.Length; i++) bonus_s[i] = true;
-
-                    //_coin
-                    //_frog_coin
-                    item["_coin"] = r.Next(1, 50);
-                    item["_frog_coin"] = r.Next(1, 50);
-                }
-
-                System.IO.File.Delete(destination);
-                using var stream_o = File.OpenWrite(destination);
-                reader.WriteStream(stream_o);
-            };
+                //_coin
+                //_frog_coin
+                item["_coin"] = r.Next(1, 50);
+                item["_frog_coin"] = r.Next(1, 50);
+            }
         }
         public static void RandomizeTreasure()
         {
-            var file = "treasure_box";
-            var path = base_path + file + ".tbl";
-            var destination = dest_path + file + ".tbl";
-
-            using (var stream = File.OpenRead(path))
+            var file = RequestFile("treasure_box");
+            var result = file.Wrap<TreasureHuntBoxData>();
+            var possible_0_value = result.Where(x => (int)x._treasure_type == 0).Select(x => (int)x._treasure_value).Distinct();
+            var possible_1_value = result.Where(x => (int)x._treasure_type == 1).Select(x => (int)x._treasure_value).Distinct();
+            var possible_2_value = result.Where(x => (int)x._treasure_type == 2).Select(x => (int)x._treasure_value).Distinct();
+            var possible_3_value = result.Where(x => (int)x._treasure_type == 3).Select(x => (int)x._treasure_value).Distinct();
+            var possible_4_value = result.Where(x => (int)x._treasure_type == 4).Select(x => (int)x._treasure_value).Distinct();
+            var possible_5_value = result.Where(x => (int)x._treasure_type == 5).Select(x => (int)x._treasure_value).Distinct();
+            var possible_6_value = result.Where(x => (int)x._treasure_type == 6).Select(x => (int)x._treasure_value).Distinct();
+            var possible_7_value = result.Where(x => (int)x._treasure_type == 7).Select(x => (int)x._treasure_value).Distinct();
+            var possible_new_types = new int[] { 1, 2, 3, 7 };
+            var possible_values = new[] { possible_0_value, all_items, possible_2_value, possible_3_value, possible_4_value, possible_5_value, possible_6_value, possible_7_value };
+            var resetTypes = result.Select(x => x._reset_type).Distinct().ToList();
+            if (modules[MODULES.TREASURE])
             {
-                var reader = new NRBFReader(stream);
-                var result = ((Object[])reader.Parse()).Select(x => (BinaryObject)x).ToArray();
-
-                var possible_0_value = result.Where(x => (int)x["_treasure_type"] == 0).Select(x => (int)x["_treasure_value"]).Distinct();
-                var possible_1_value = result.Where(x => (int)x["_treasure_type"] == 1).Select(x => (int)x["_treasure_value"]).Distinct();
-                var possible_2_value = result.Where(x => (int)x["_treasure_type"] == 2).Select(x => (int)x["_treasure_value"]).Distinct();
-                var possible_3_value = result.Where(x => (int)x["_treasure_type"] == 3).Select(x => (int)x["_treasure_value"]).Distinct();
-                var possible_4_value = result.Where(x => (int)x["_treasure_type"] == 4).Select(x => (int)x["_treasure_value"]).Distinct();
-                var possible_5_value = result.Where(x => (int)x["_treasure_type"] == 5).Select(x => (int)x["_treasure_value"]).Distinct();
-                var possible_6_value = result.Where(x => (int)x["_treasure_type"] == 6).Select(x => (int)x["_treasure_value"]).Distinct();
-                var possible_7_value = result.Where(x => (int)x["_treasure_type"] == 7).Select(x => (int)x["_treasure_value"]).Distinct();
-                var possible_new_types = new int[] { 1, 2, 3, 7 };
-                var possible_values = new[] { possible_0_value, all_items, possible_2_value, possible_3_value, possible_4_value, possible_5_value, possible_6_value, possible_7_value };
-                var resetTypes = result.Select(x => x["_reset_type"]).Distinct().ToList();
-                if (modules[MODULES.TREASURE])
+                Console.WriteLine("Randomizing treasure boxes");
+                foreach (var item in result)
                 {
-                    Console.WriteLine("Randomizing treasure boxes");
-                    foreach (var item in result)
+                    if (possible_new_types.Contains((int)item._treasure_type))
                     {
-                        if (possible_new_types.Contains((int)item["_treasure_type"]))
-                        {
-                            //If is not a special chest, then randomize it
-                            item["_reset_type"] = 1;
-                            item["_treasure_type"] = (int)possible_new_types[r.Next(possible_new_types.Length)];
-                            item["_treasure_value"] = (int)(possible_values[(int)item["_treasure_type"]].OrderBy(x => r.Next()).First());
-                        }
-                        //_treasure_type
-                        //_treasure_value
-                        //_type {[_treasure_type, 
+                        //If is not a special chest, then randomize it
+                        item._reset_type = 1;
+                        item._treasure_type = (int)possible_new_types[r.Next(possible_new_types.Length)];
+                        item._treasure_value = (int)(possible_values[(int)item._treasure_type].OrderBy(x => r.Next()).First());
                     }
+                    //_treasure_type
+                    //_treasure_value
+                    //_type {[_treasure_type, 
                 }
-                Console.WriteLine(string.Join(",", result.Select(x => x["_treasure_type"]).Distinct()));
-                Console.WriteLine(string.Join(",", result.Select(x => x["_treasure_value"]).Distinct()));
-                Console.WriteLine(string.Join(",", possible_0_value));
-                //treasure_type 1 would be an item?C:\Users\moysk\Desktop\__\t\BinaryFormatDataStructure\README.md
-                Console.WriteLine(string.Join(",", possible_1_value));
-                //tresure_type 2 would be coins?
-                Console.WriteLine(string.Join(",", possible_2_value));
-                //tresure_type 3 would be frog coins?
-                Console.WriteLine(string.Join(",", possible_3_value));
-                Console.WriteLine(string.Join(",", possible_4_value));
-                Console.WriteLine(string.Join(",", possible_5_value));
-                Console.WriteLine(string.Join(",", possible_6_value));
-                //tresure_type 7 would be another coins?
-                Console.WriteLine(string.Join(",", possible_7_value));
-
-                System.IO.File.Delete(destination);
-                using var stream_o = File.OpenWrite(destination);
-                reader.WriteStream(stream_o);
-            };
+            }
+            //Console.WriteLine(string.Join(",", result.Select(x => x["_treasure_type"]).Distinct()));
+            //Console.WriteLine(string.Join(",", result.Select(x => x["_treasure_value"]).Distinct()));
+            //Console.WriteLine(string.Join(",", possible_0_value));
+            ////treasure_type 1 would be an item?C:\Users\moysk\Desktop\__\t\BinaryFormatDataStructure\README.md
+            //Console.WriteLine(string.Join(",", possible_1_value));
+            ////tresure_type 2 would be coins?
+            //Console.WriteLine(string.Join(",", possible_2_value));
+            ////tresure_type 3 would be frog coins?
+            //Console.WriteLine(string.Join(",", possible_3_value));
+            //Console.WriteLine(string.Join(",", possible_4_value));
+            //Console.WriteLine(string.Join(",", possible_5_value));
+            //Console.WriteLine(string.Join(",", possible_6_value));
+            ////tresure_type 7 would be another coins?
+            //Console.WriteLine(string.Join(",", possible_7_value));
         }
         public static void RandomizeCutscenes()
         {
@@ -782,67 +660,111 @@ namespace Randomizer
         }
         public static void CreateMissingAnimations()
         {
-            var file = "battle_motion_player";
-            var path = base_path + file + ".tbl";
-            var destination = dest_path + file + ".tbl";
+            var file = RequestFile("battle_motion_player");
+            var result = file.WorkSet;
+            var _player_id = result.Select(x => (BinaryObject)x)
+                .Select(x => (int)x["_player_id"]).Distinct();
 
-            using (var stream = File.OpenRead(path))
-            {
-                var reader = new NRBFReader(stream);
-                var result = (reader.Parse());
-                var resultArray = (object[])result;
-
-                var _player_id = ((object[])result).Select(x => (BinaryObject)x)
-                    .Select(x => (int)x["_player_id"]).Distinct();
-
-                var workList = new List<object>(resultArray);
-
-                int add = 0;
-                foreach (var player in new[] {
+            int add = 0;
+            foreach (var player in new[] {
                 PLAYER.MARIO, PLAYER.MALLOW, PLAYER.GENO,PLAYER.BOWSER, PLAYER.PEACH})
-                {
-                    var animationForHammer = resultArray.Select(x => (BinaryObject)x)
-                       .Where(x => (int)x["_player_id"] == player && (int)x["_skill_id"] == 1 && (int)x["_weapon_id"] == 0).ToList();
-                    if (modules[MODULES.EQUIP])
-                        foreach (var weapon in shop_weapons)
+            {
+                var animationForHammer = result.Select(x => (BinaryObject)x)
+                   .Where(x => (int)x["_player_id"] == player && (int)x["_skill_id"] == 1 && (int)x["_weapon_id"] == 0).ToList();
+                if (modules[MODULES.EQUIP])
+                    foreach (var weapon in shop_weapons)
+                    {
+                        if (!result.Select(x => (BinaryObject)x).Any(x => (int)x["_player_id"] == player && (int)x["_weapon_id"] == weapon))
+                            foreach (var animPart in animationForHammer.Select(x => x.Clone()))
+                            {
+                                animPart["_weapon_id"] = weapon;
+                                result.Add(animPart);
+                                file.Reader?.AddObject(animPart);
+                                add++;
+                            }
+                    }
+                var firstSkillForPlayer = (int)result.Select(x => (BinaryObject)x)
+                  .Where(x => (int)x["_player_id"] == player && (int)x["_skill_id"] != 1 && (int)x["_weapon_id"] == 0).First()["_skill_id"];
+
+                var firstAnimation = result.Select(x => (BinaryObject)x)
+                  .Where(x => (int)x["_player_id"] == player && (int)x["_skill_id"] == firstSkillForPlayer && (int)x["_weapon_id"] == 0).ToList();
+                if (modules[MODULES.SPECIALS])
+                    foreach (var skillSet in all_skills)
+                        foreach (var skill in skillSet)
+                        //foreach (var skill in all_skills[player])
                         {
-                            if (!resultArray.Select(x => (BinaryObject)x).Any(x => (int)x["_player_id"] == player && (int)x["_weapon_id"] == weapon))
-                                foreach (var animPart in animationForHammer.Select(x => x.Clone()))
+                            if (!result.Select(x => (BinaryObject)x).Any(x => (int)x["_player_id"] == player && (int)x["_skill_id"] == skill))
+                                foreach (var animPart in firstAnimation.Select(x => x.Clone()))
                                 {
-                                    animPart["_weapon_id"] = weapon;
-                                    workList.Add(animPart);
-                                    reader.AddObject(animPart);
+                                    animPart["_skill_id"] = skill;
+                                    result.Add(animPart);
+                                    file.Reader?.AddObject(animPart);
                                     add++;
                                 }
                         }
-                    var firstSkillForPlayer = (int)resultArray.Select(x => (BinaryObject)x)
-                      .Where(x => (int)x["_player_id"] == player && (int)x["_skill_id"] != 1 && (int)x["_weapon_id"] == 0).First()["_skill_id"];
+            }
 
-                    var firstAnimation = resultArray.Select(x => (BinaryObject)x)
-                      .Where(x => (int)x["_player_id"] == player && (int)x["_skill_id"] == firstSkillForPlayer && (int)x["_weapon_id"] == 0).ToList();
-                    if (modules[MODULES.SPECIALS])
-                        foreach (var skillSet in all_skills)
-                            foreach (var skill in skillSet)
-                            //foreach (var skill in all_skills[player])
-                            {
-                                if (!resultArray.Select(x => (BinaryObject)x).Any(x => (int)x["_player_id"] == player && (int)x["_skill_id"] == skill))
-                                    foreach (var animPart in firstAnimation.Select(x => x.Clone()))
-                                    {
-                                        animPart["_skill_id"] = skill;
-                                        workList.Add(animPart);
-                                        reader.AddObject(animPart);
-                                        add++;
-                                    }
-                            }
-                }
-                reader.Replace(resultArray, workList.ToArray());
+        }
 
-                System.IO.File.Delete(destination);
-                using (var stream_o = File.OpenWrite(destination))
+        public static void Test()
+        {
+            //foreach (var kv in files)
+            //{
+            //    var bo = kv.Value.WorkSet.FirstOrDefault(x => x != null);
+            //    if(bo != null)
+            //    {
+            //        var clz = CreateWrapper(kv.Value,bo.TypeName);
+
+            //        Console.WriteLine(clz);
+            //    }    
+            //}
+
+            var file = RequestFile("treasure_disappear");
+            //var bo = file.WorkSet.FirstOrDefault(x => x != null);
+            //var clz = CreateWrapper(file, bo.TypeName);
+
+            var data = file.Wrap<TreasureHuntDisappearData>().ToList();
+            foreach (TreasureHuntDisappearData treasure in data)
+            {
+                if(treasure._kind_id == 1)
                 {
-                    reader.WriteStream(stream_o);
+                    int k = 3;
                 }
-            };
+                if (treasure._kind_id == 6 || treasure._needs_any_script)
+                    continue;
+                /**
+                 * 1 = Coin
+                 * 2 = frog coin
+                 * 3 = mushroom
+                 * 4 = flower tab
+                 * 5 = an item, use _item_id to set 
+                 * 6 = item + management + script? (Always item 87)
+                 */
+                treasure._kind_id = (new int[] { 1,2,3,4,5 }).OrderBy(x => r.Next()).First();
+                //treasure._is_frog_coin = treasure._kind_id == 2;
+                //treasure._is_mushroom = treasure._kind_id == 3;
+                //treasure._is_flower = treasure._kind_id == 4;
+                if (treasure._kind_id == 5)//An item
+                {
+                    treasure._item_id = all_items.OrderBy(x => r.Next()).First();
+                }
+                else
+                {
+                    treasure._item_id = 0;
+                }
+                if (treasure._kind_id == 1)//A coin
+                {
+                    treasure._coin = r.Next(0, 100);
+                }
+                else
+                {
+                    treasure._coin = 0;
+                }
+                //treasure._restoration = 1;
+
+
+            }
+            var set = file.WorkSet;
         }
         public static void Main(string[] args)
         {
@@ -870,94 +792,74 @@ namespace Randomizer
             ShortenLanguage();
             Watermark();
 
-
             //player_action
             //encounter
             //shop
             //level_up
 
-            //BinaryFormatter bf = new BinaryFormatter();
-            //System.IO.File.Delete("demo.bin");
-            //using (var stream = File.OpenWrite("demo.bin"))
-            //{
-            //    var arr = new Validator[] { new Validator() { a = "blob" }, new Validator() { a = "blob" }, null };
-            //    arr[2] = arr[1];
-            //    bf.Serialize(stream, arr);
-            //}
+            Test();
 
-            //using (var stream = File.OpenRead("demo.bin"))
-            //{
-            //    var reader = new NRBFReader(stream);
-            //    var result = (reader.Parse());
-            //    Console.WriteLine(result);
-            //    System.IO.File.Delete("demo_o.bin");
-            //    using (var stream_o = File.OpenWrite("demo_o.bin"))
-            //    {
-            //        reader.WriteStream(stream_o);
-            //    }
-            //};
+            foreach (var kv in files)
+            {
+                kv.Value.Save();
+            }
 
-            //using (var stream = File.OpenRead("demo_o.bin"))
-            //{
-            //    var reader = new NRBFReader(stream);
-            //    var result = (reader.Parse());
-            //}
 
-            //var file = "battle_motion_monster";
-            //var file = "battle_motion_player";
-            //var path = base_path + file + ".tbl";
-            //var destination = dest_path + file + ".tbl";
+        }
 
-            //using (var stream = File.OpenRead(path))
-            //{
-            //    var reader = new NRBFReader(stream);
-            //    var result = (reader.Parse());
-            //    var resultArray = (object[])result;
+        public static string CreateWrapper(TBLFile file, string typeName)
+        {
+            List<string> subClasses = new();
+            var str = "public class " + typeName + " { \r\n";
+            str += "    readonly BinaryObject data;\r\n";
+            str += "    public " + typeName + "(BinaryObject bo){\r\n";
+            str += "        this.data = bo;\r\n";
+            str += "    }\r\n";
+            var classInfo = file.Reader.GetClassInfo(typeName);
 
-            //    var _player_id = ((object[])result).Select(x => (BinaryObject)x)
-            //        .Select(x => (int)x["_player_id"]).Distinct();
+            for (int i = 0; i < classInfo.ClassInfo.MemberCount; i++)
+            {
+                var memberName = classInfo.ClassInfo.MemberNames[i];
+                var memberType = classInfo.MemberTypeInfo.BinaryType[i];
+                var memberTypePrimitive = classInfo.MemberTypeInfo.AdditionalInfos[i];
 
-            //    var workList = new List<object>(resultArray);
-
-            //    int add = 0;
-            //    foreach (var player in new[] {
-            //    PLAYER.MARIO, PLAYER.MALLOW, PLAYER.GENO,PLAYER.BOWSER, PLAYER.PEACH})
-            //    {
-            //        var animationForHammer = resultArray.Select(x => (BinaryObject)x)
-            //           .Where(x => (int)x["_player_id"] == player && (int)x["_skill_id"] == 1 && (int)x["_weapon_id"] == 0).ToList();
-            //        foreach (var weapon in shop_weapons)
-            //        {
-            //            if (!resultArray.Select(x => (BinaryObject)x).Any(x => (int)x["_player_id"] == player && (int)x["_weapon_id"] == weapon))
-            //                foreach (var animPart in animationForHammer.Select(x => x.Clone()))
-            //                {
-            //                    animPart["_weapon_id"] = weapon;
-            //                    workList.Add(animPart);
-            //                    add++;
-            //                }
-            //        }
-            //    }
-            //    reader.Replace(resultArray, workList.ToArray());
-
-            //    /*var goomba = ((object[])result).Select(x => (BinaryObject)x).Where(x => (int)x["_player_id"] == MONSTER.Goomba && (int)x["_skill_id"] == 502).ToList();
-            //    Console.WriteLine(String.Join(",",goomba[0].Keys));
-            //    foreach(var animation in goomba)
-            //    {
-            //        Console.WriteLine(String.Join(",", goomba[0].Values.Select(x=>""+x)));
-            //    }*/
-
-            //    System.IO.File.Delete(destination);
-            //    using (var stream_o = File.OpenWrite(destination))
-            //    {
-            //        reader.WriteStream(stream_o);
-            //    }
-            //};
-
-            //using (var stream = File.OpenRead(destination))
-            //{
-            //    var reader = new NRBFReader(stream);
-            //    var result = (reader.Parse());
-            //}
-
+                if (memberType == BinaryType.Primitive)
+                {
+                    str += "    public " + memberTypePrimitive + " " + memberName + " { get { return (" + memberTypePrimitive + ")data[\"" + memberName + "\"]; } set { data[\"" + memberName + "\"] = value;} }\r\n";
+                }
+                else if (memberType == BinaryType.PrimitiveArray)
+                {
+                    str += "    public " + memberTypePrimitive + "[] " + memberName + " { get { return (" + memberTypePrimitive + "[])data[\"" + memberName + "\"]; } set {  data[\"" + memberName + "\"] = value; } }\r\n";
+                }
+                else if (memberType == BinaryType.String)
+                {
+                    str += "    public string " + memberName + " { get { return ((BinaryObjectStringRecord)data[\"" + memberName + "\"]).Value; } set {  ((BinaryObjectStringRecord)data[\"" + memberName + "\"]).Value = value; } }\r\n";
+                }
+                else if (memberType == BinaryType.Class)
+                {
+                    ClassTypeInfo classTypeInfo = (ClassTypeInfo)memberTypePrimitive;
+                    if (classTypeInfo.TypeName.Contains("[]"))
+                    {
+                        //Array
+                        str += "    public " + classTypeInfo.TypeName + " " + memberName + " { get { return ((object[])data[\"" + memberName + "\"]).Select(x=> new " + classTypeInfo.TypeName + "((BinaryObject)x)).ToArray(); } } }\r\n";
+                    }
+                    else
+                    {
+                        str += "    public " + classTypeInfo.TypeName + " " + memberName + " { get { return new " + classTypeInfo.TypeName + "((BinaryObject)data[\"" + memberName + "\"]); } } }\r\n";
+                    }
+                    subClasses.Add(classTypeInfo.TypeName.Replace("[]", ""));
+                }
+                else
+                {
+                    int j = 05;
+                }
+            }
+            str += "}\r\n";
+            foreach (var clz in subClasses)
+            {
+                str += CreateWrapper(file, clz);
+            }
+            return str;
         }
     }
 }

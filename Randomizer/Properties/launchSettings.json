@@ -2,7 +2,7 @@
   "profiles": {
     "Randomizer": {
       "commandName": "Project",
-      "commandLineArgs": "-a -SHORT_TEXT"
+      "commandLineArgs": "-a"
     }
   }
 }

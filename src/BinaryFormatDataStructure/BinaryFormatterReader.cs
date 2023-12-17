@@ -24,7 +24,8 @@ namespace BinaryFormatDataStructure
 
         public object Replace(object source, object destination)
         {
-            var key = _objectTracker.Where(x => x.Value == source).FirstOrDefault().Key;
+
+            var key = _objectTracker.Where(x => x.Value == source).First().Key;
             if (key > 0)
             {
                 _objectTracker[key] = destination;
@@ -42,6 +43,17 @@ namespace BinaryFormatDataStructure
             _objectTracker[nid] = obj;
             return nid;
         }
+        public ClassWithMembersAndTypesRecord GetClassInfo(string typename)
+        {
+            return (ClassWithMembersAndTypesRecord)_objectTracker.Values.Where(x =>
+            {
+                if (x is ClassWithMembersAndTypesRecord cmr)
+                    return cmr.ClassInfo.Name == typename;
+                return false;
+            }
+            ).FirstOrDefault();
+        }
+
         public void WriteStream(Stream outputStream)
         {
             BinaryWriter writer = new BinaryWriter(outputStream);
@@ -70,6 +82,7 @@ namespace BinaryFormatDataStructure
                 }
                 return id.Key;
             }
+
             void Write(object obj)
             {
                 if (obj is string[] s_arr)
@@ -1206,7 +1219,7 @@ namespace BinaryFormatDataStructure
             return result;
         }
 
-       
+
 
         private void CompleteDeferredItems()
         {
