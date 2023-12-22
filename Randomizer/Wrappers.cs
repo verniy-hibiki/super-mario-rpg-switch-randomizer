@@ -526,7 +526,278 @@ namespace Randomizer
         public Int32[] _skill_id { get { return (Int32[])data["_skill_id"]; } set { data["_skill_id"] = value; } }
         public Int32 _character_id { get { return (Int32)data["_character_id"]; } set { data["_character_id"] = value; } }
     }
+    public class PCPositionData
+    {
+        readonly BinaryObject data;
+        public PCPositionData(BinaryObject bo)
+        {
+            this.data = bo;
+        }
+        public Int32 _pos_id { get { return (Int32)data["_pos_id"]; } set { data["_pos_id"] = value; } }
+        public Single[] _pos_x { get { return (Single[])data["_pos_x"]; } set { data["_pos_x"] = value; } }
+        public Single[] _pos_y { get { return (Single[])data["_pos_y"]; } set { data["_pos_y"] = value; } }
+        public Single[] _pos_z { get { return (Single[])data["_pos_z"]; } set { data["_pos_z"] = value; } }
+    }
+    public class FloorData
+    {
+        readonly BinaryObject data;
+        public FloorData(BinaryObject bo)
+        {
+            this.data = bo;
+        }
+        public Int32 _floor_id { get { return (Int32)data["_floor_id"]; } set { data["_floor_id"] = value; } }
+        public string _floor_name { get { return ((BinaryObjectStringRecord)data["_floor_name"]).Value; } set { ((BinaryObjectStringRecord)data["_floor_name"]).Value = value; } }
+        public Int32 _area_id { get { return (Int32)data["_area_id"]; } set { data["_area_id"] = value; } }
+        public string _debug_disp_floor_name { get { return ((BinaryObjectStringRecord)data["_debug_disp_floor_name"]).Value; } set { ((BinaryObjectStringRecord)data["_debug_disp_floor_name"]).Value = value; } }
+        public Boolean _can_controller_use { get { return (Boolean)data["_can_controller_use"]; } set { data["_can_controller_use"] = value; } }
+        public Int32 _btl_bg_id_normal { get { return (Int32)data["_btl_bg_id_normal"]; } set { data["_btl_bg_id_normal"] = value; } }
+        public Int32 _btl_bg_id_event { get { return (Int32)data["_btl_bg_id_event"]; } set { data["_btl_bg_id_event"] = value; } }
+        public Int32 _bgm_id { get { return (Int32)data["_bgm_id"]; } set { data["_bgm_id"] = value; } }
+        public Int32 _bgm_offset_frame { get { return (Int32)data["_bgm_offset_frame"]; } set { data["_bgm_offset_frame"] = value; } }
+        public Boolean _can_break_save { get { return (Boolean)data["_can_break_save"]; } set { data["_can_break_save"] = value; } }
+        public Int32 _camera_controll { get { return (Int32)data["_camera_controll"]; } set { data["_camera_controll"] = value; } }
+        public Int32 _disp_map_ptn { get { return (Int32)data["_disp_map_ptn"]; } set { data["_disp_map_ptn"] = value; } }
+        public Int32 _shop_info { get { return (Int32)data["_shop_info"]; } set { data["_shop_info"] = value; } }
+        public string _renderparam { get { return ((BinaryObjectStringRecord)data["_renderparam"]).Value; } set { ((BinaryObjectStringRecord)data["_renderparam"]).Value = value; } }
+        public Int32 _shadowdistance { get { return (Int32)data["_shadowdistance"]; } set { data["_shadowdistance"] = value; } }
+        public Int32 _shadowcascade { get { return (Int32)data["_shadowcascade"]; } set { data["_shadowcascade"] = value; } }
+        public string _skyboxmaterial { get { return ((BinaryObjectStringRecord)data["_skyboxmaterial"]).Value; } set { ((BinaryObjectStringRecord)data["_skyboxmaterial"]).Value = value; } }
+        public Int32 _source1 { get { return (Int32)data["_source1"]; } set { data["_source1"] = value; } }
+        public Single _ambientintensity { get { return (Single)data["_ambientintensity"]; } set { data["_ambientintensity"] = value; } }
+        public Single _R1 { get { return (Single)data["_R1"]; } set { data["_R1"] = value; } }
+        public Single _G1 { get { return (Single)data["_G1"]; } set { data["_G1"] = value; } }
+        public Single _B1 { get { return (Single)data["_B1"]; } set { data["_B1"] = value; } }
+        public Single _R_E { get { return (Single)data["_R_E"]; } set { data["_R_E"] = value; } }
+        public Single _G_E { get { return (Single)data["_G_E"]; } set { data["_G_E"] = value; } }
+        public Single _B_E { get { return (Single)data["_B_E"]; } set { data["_B_E"] = value; } }
+        public Single _R_G { get { return (Single)data["_R_G"]; } set { data["_R_G"] = value; } }
+        public Single _G_G { get { return (Single)data["_G_G"]; } set { data["_G_G"] = value; } }
+        public Single _B_G { get { return (Single)data["_B_G"]; } set { data["_B_G"] = value; } }
+        public Int32 _source2 { get { return (Int32)data["_source2"]; } set { data["_source2"] = value; } }
+        public Int32 _resolution { get { return (Int32)data["_resolution"]; } set { data["_resolution"] = value; } }
+        public string _customreflection { get { return ((BinaryObjectStringRecord)data["_customreflection"]).Value; } set { ((BinaryObjectStringRecord)data["_customreflection"]).Value = value; } }
+        public Single _reflectionintensity { get { return (Single)data["_reflectionintensity"]; } set { data["_reflectionintensity"] = value; } }
+        public Int32 _reflectionbounces { get { return (Int32)data["_reflectionbounces"]; } set { data["_reflectionbounces"] = value; } }
+        public Boolean _fog { get { return (Boolean)data["_fog"]; } set { data["_fog"] = value; } }
+        public Single _R3 { get { return (Single)data["_R3"]; } set { data["_R3"] = value; } }
+        public Single _G3 { get { return (Single)data["_G3"]; } set { data["_G3"] = value; } }
+        public Single _B3 { get { return (Single)data["_B3"]; } set { data["_B3"] = value; } }
+        public Int32 _mode { get { return (Int32)data["_mode"]; } set { data["_mode"] = value; } }
+        public Single _start { get { return (Single)data["_start"]; } set { data["_start"] = value; } }
+        public Single _end { get { return (Single)data["_end"]; } set { data["_end"] = value; } }
+        public Single _density { get { return (Single)data["_density"]; } set { data["_density"] = value; } }
+        public string _mtl_name { get { return ((BinaryObjectStringRecord)data["_mtl_name"]).Value; } set { ((BinaryObjectStringRecord)data["_mtl_name"]).Value = value; } }
+        public Int32 _world_map_id { get { return (Int32)data["_world_map_id"]; } set { data["_world_map_id"] = value; } }
+        public Int32 _world_symbol_id { get { return (Int32)data["_world_symbol_id"]; } set { data["_world_symbol_id"] = value; } }
+        public Int32 _world_local_flag1 { get { return (Int32)data["_world_local_flag1"]; } set { data["_world_local_flag1"] = value; } }
+        public Int32 _world_local_flag2 { get { return (Int32)data["_world_local_flag2"]; } set { data["_world_local_flag2"] = value; } }
+        public Int32 _menulist_id { get { return (Int32)data["_menulist_id"]; } set { data["_menulist_id"] = value; } }
+        public Int32 _exit_id { get { return (Int32)data["_exit_id"]; } set { data["_exit_id"] = value; } }
+        public Int32 _foot_steps { get { return (Int32)data["_foot_steps"]; } set { data["_foot_steps"] = value; } }
+        public Int32 _environmental_sound { get { return (Int32)data["_environmental_sound"]; } set { data["_environmental_sound"] = value; } }
+        public Int32 _fixed_point { get { return (Int32)data["_fixed_point"]; } set { data["_fixed_point"] = value; } }
+        public Int32 _dsp_id { get { return (Int32)data["_dsp_id"]; } set { data["_dsp_id"] = value; } }
+        public Int32 _state_change_flag1 { get { return (Int32)data["_state_change_flag1"]; } set { data["_state_change_flag1"] = value; } }
+        public Int32 _state_change_flag2 { get { return (Int32)data["_state_change_flag2"]; } set { data["_state_change_flag2"] = value; } }
+        public Int32 _place_name_id { get { return (Int32)data["_place_name_id"]; } set { data["_place_name_id"] = value; } }
+    }
+    public class ItemExplainData
+    {
+        readonly BinaryObject data;
+        public ItemExplainData(BinaryObject bo)
+        {
+            this.data = bo;
+        }
+        public Int32 _id { get { return (Int32)data["_id"]; } set { data["_id"] = value; } }
+        public string _disp_name_jp { get { return ((BinaryObjectStringRecord)data["_disp_name_jp"]).Value; } set { ((BinaryObjectStringRecord)data["_disp_name_jp"]).Value = value; } }
+        public string _disp_name_en_at_menu { get { return ((BinaryObjectStringRecord)data["_disp_name_en_at_menu"]).Value; } set { ((BinaryObjectStringRecord)data["_disp_name_en_at_menu"]).Value = value; } }
+        public string _disp_name_fr_at_menu { get { return ((BinaryObjectStringRecord)data["_disp_name_fr_at_menu"]).Value; } set { ((BinaryObjectStringRecord)data["_disp_name_fr_at_menu"]).Value = value; } }
+        public string _disp_name_it_at_menu { get { return ((BinaryObjectStringRecord)data["_disp_name_it_at_menu"]).Value; } set { ((BinaryObjectStringRecord)data["_disp_name_it_at_menu"]).Value = value; } }
+        public string _disp_name_de_at_menu { get { return ((BinaryObjectStringRecord)data["_disp_name_de_at_menu"]).Value; } set { ((BinaryObjectStringRecord)data["_disp_name_de_at_menu"]).Value = value; } }
+        public string _disp_name_es_at_menu { get { return ((BinaryObjectStringRecord)data["_disp_name_es_at_menu"]).Value; } set { ((BinaryObjectStringRecord)data["_disp_name_es_at_menu"]).Value = value; } }
+        public string _disp_name_cn_traditional { get { return ((BinaryObjectStringRecord)data["_disp_name_cn_traditional"]).Value; } set { ((BinaryObjectStringRecord)data["_disp_name_cn_traditional"]).Value = value; } }
+        public string _disp_name_cn_Simplified { get { return ((BinaryObjectStringRecord)data["_disp_name_cn_Simplified"]).Value; } set { ((BinaryObjectStringRecord)data["_disp_name_cn_Simplified"]).Value = value; } }
+        public string _disp_name_kr { get { return ((BinaryObjectStringRecord)data["_disp_name_kr"]).Value; } set { ((BinaryObjectStringRecord)data["_disp_name_kr"]).Value = value; } }
+    }
+    public class KoudoukoukaData
+    {
+        readonly BinaryObject data;
+        public KoudoukoukaData(BinaryObject bo)
+        {
+            this.data = bo;
+        }
+        public Int32 _id { get { return (Int32)data["_id"]; } set { data["_id"] = value; } }
+        public Int32 _continue_turn { get { return (Int32)data["_continue_turn"]; } set { data["_continue_turn"] = value; } }
+        public Boolean _add_silent { get { return (Boolean)data["_add_silent"]; } set { data["_add_silent"] = value; } }
+        public Boolean _add_sleep { get { return (Boolean)data["_add_sleep"]; } set { data["_add_sleep"] = value; } }
+        public Boolean _add_poison { get { return (Boolean)data["_add_poison"]; } set { data["_add_poison"] = value; } }
+        public Boolean _add_fear { get { return (Boolean)data["_add_fear"]; } set { data["_add_fear"] = value; } }
+        public Boolean _add_mushroom { get { return (Boolean)data["_add_mushroom"]; } set { data["_add_mushroom"] = value; } }
+        public Boolean _add_scarecrow { get { return (Boolean)data["_add_scarecrow"]; } set { data["_add_scarecrow"] = value; } }
+        public Boolean _end_before_act { get { return (Boolean)data["_end_before_act"]; } set { data["_end_before_act"] = value; } }
+        public Boolean _end_after_act { get { return (Boolean)data["_end_after_act"]; } set { data["_end_after_act"] = value; } }
+    }
+    public class MapJumpData
+    {
+        readonly BinaryObject data;
+        public MapJumpData(BinaryObject bo)
+        {
+            this.data = bo;
+        }
+        public Int32 m_type { get { return (Int32)data["m_type"]; } set { data["m_type"] = value; } }
+        public Int32 m_src_map_id { get { return (Int32)data["m_src_map_id"]; } set { data["m_src_map_id"] = value; } }
+        public Int32 m_src_exit_id { get { return (Int32)data["m_src_exit_id"]; } set { data["m_src_exit_id"] = value; } }
+        public Int32 m_dst_map_id { get { return (Int32)data["m_dst_map_id"]; } set { data["m_dst_map_id"] = value; } }
+        public Int32 m_dst_exit_id { get { return (Int32)data["m_dst_exit_id"]; } set { data["m_dst_exit_id"] = value; } }
+        public Int32 m_dir { get { return (Int32)data["m_dir"]; } set { data["m_dir"] = value; } }
+        public Int32 m_symbol_id { get { return (Int32)data["m_symbol_id"]; } set { data["m_symbol_id"] = value; } }
+    }
+    public class MonsterListPCData
+    {
+        readonly BinaryObject data;
+        public MonsterListPCData(BinaryObject bo)
+        {
+            this.data = bo;
+        }
+        public Int32 _camera_pattern { get { return (Int32)data["_camera_pattern"]; } set { data["_camera_pattern"] = value; } }
+        public Single _pos_x { get { return (Single)data["_pos_x"]; } set { data["_pos_x"] = value; } }
+        public Single _pos_y { get { return (Single)data["_pos_y"]; } set { data["_pos_y"] = value; } }
+        public Single _pos_z { get { return (Single)data["_pos_z"]; } set { data["_pos_z"] = value; } }
+        public Single _cam_pos_x { get { return (Single)data["_cam_pos_x"]; } set { data["_cam_pos_x"] = value; } }
+        public Single _cam_pos_y { get { return (Single)data["_cam_pos_y"]; } set { data["_cam_pos_y"] = value; } }
+        public Single _cam_pos_z { get { return (Single)data["_cam_pos_z"]; } set { data["_cam_pos_z"] = value; } }
+    }
+    public class MonsterReactionData
+    {
+        readonly BinaryObject data;
+        public MonsterReactionData(BinaryObject bo)
+        {
+            this.data = bo;
+        }
+        public Int32 _monster_id { get { return (Int32)data["_monster_id"]; } set { data["_monster_id"] = value; } }
+        public Int32 _reaction_ptn { get { return (Int32)data["_reaction_ptn"]; } set { data["_reaction_ptn"] = value; } }
+        public Int32 _reaction_trigger_kind { get { return (Int32)data["_reaction_trigger_kind"]; } set { data["_reaction_trigger_kind"] = value; } }
+        public Int32 _reaction_trigger_live { get { return (Int32)data["_reaction_trigger_live"]; } set { data["_reaction_trigger_live"] = value; } }
+        public Int32 _reaction_trigger_hp { get { return (Int32)data["_reaction_trigger_hp"]; } set { data["_reaction_trigger_hp"] = value; } }
+        public Int32 _targetting_ptn { get { return (Int32)data["_targetting_ptn"]; } set { data["_targetting_ptn"] = value; } }
+        public Int32 _reaction_act_table_id { get { return (Int32)data["_reaction_act_table_id"]; } set { data["_reaction_act_table_id"] = value; } }
+    }
 
+    public class CharaNameData
+    {
+        readonly BinaryObject data;
+        public CharaNameData(BinaryObject bo)
+        {
+            this.data = bo;
+        }
+        public Int32 _id { get { return (Int32)data["_id"]; } set { data["_id"] = value; } }
+        public string _gender_jp { get { return ((BinaryObjectStringRecord)data["_gender_jp"]).Value; } set { ((BinaryObjectStringRecord)data["_gender_jp"]).Value = value; } }
+        public string _disp_name_jp { get { return ((BinaryObjectStringRecord)data["_disp_name_jp"]).Value; } set { ((BinaryObjectStringRecord)data["_disp_name_jp"]).Value = value; } }
+        public string _disp_name_en_at_menu { get { return ((BinaryObjectStringRecord)data["_disp_name_en_at_menu"]).Value; } set { ((BinaryObjectStringRecord)data["_disp_name_en_at_menu"]).Value = value; } }
+        public string _disp_name_fr_at_menu { get { return ((BinaryObjectStringRecord)data["_disp_name_fr_at_menu"]).Value; } set { ((BinaryObjectStringRecord)data["_disp_name_fr_at_menu"]).Value = value; } }
+        public string _disp_name_it_at_menu { get { return ((BinaryObjectStringRecord)data["_disp_name_it_at_menu"]).Value; } set { ((BinaryObjectStringRecord)data["_disp_name_it_at_menu"]).Value = value; } }
+        public string _disp_name_de_at_menu { get { return ((BinaryObjectStringRecord)data["_disp_name_de_at_menu"]).Value; } set { ((BinaryObjectStringRecord)data["_disp_name_de_at_menu"]).Value = value; } }
+        public string _disp_name_es_at_menu { get { return ((BinaryObjectStringRecord)data["_disp_name_es_at_menu"]).Value; } set { ((BinaryObjectStringRecord)data["_disp_name_es_at_menu"]).Value = value; } }
+        public string _disp_name_cn_traditional { get { return ((BinaryObjectStringRecord)data["_disp_name_cn_traditional"]).Value; } set { ((BinaryObjectStringRecord)data["_disp_name_cn_traditional"]).Value = value; } }
+        public string _disp_name_cn_Simplified { get { return ((BinaryObjectStringRecord)data["_disp_name_cn_Simplified"]).Value; } set { ((BinaryObjectStringRecord)data["_disp_name_cn_Simplified"]).Value = value; } }
+        public string _disp_name_kr { get { return ((BinaryObjectStringRecord)data["_disp_name_kr"]).Value; } set { ((BinaryObjectStringRecord)data["_disp_name_kr"]).Value = value; } }
+        public Boolean _disp_name_kr_vowel_flag { get { return (Boolean)data["_disp_name_kr_vowel_flag"]; } set { data["_disp_name_kr_vowel_flag"] = value; } }
+    }
+
+    public class PlaceMenuData
+    {
+        readonly BinaryObject data;
+        public PlaceMenuData(BinaryObject bo)
+        {
+            this.data = bo;
+        }
+        public Int32 _id { get { return (Int32)data["_id"]; } set { data["_id"] = value; } }
+        public Int32 _quotation_id { get { return (Int32)data["_quotation_id"]; } set { data["_quotation_id"] = value; } }
+        public string _disp_name_jp { get { return ((BinaryObjectStringRecord)data["_disp_name_jp"]).Value; } set { ((BinaryObjectStringRecord)data["_disp_name_jp"]).Value = value; } }
+        public string _disp_name_en_at_menu { get { return ((BinaryObjectStringRecord)data["_disp_name_en_at_menu"]).Value; } set { ((BinaryObjectStringRecord)data["_disp_name_en_at_menu"]).Value = value; } }
+        public string _disp_name_fr_at_menu { get { return ((BinaryObjectStringRecord)data["_disp_name_fr_at_menu"]).Value; } set { ((BinaryObjectStringRecord)data["_disp_name_fr_at_menu"]).Value = value; } }
+        public string _disp_name_it_at_menu { get { return ((BinaryObjectStringRecord)data["_disp_name_it_at_menu"]).Value; } set { ((BinaryObjectStringRecord)data["_disp_name_it_at_menu"]).Value = value; } }
+        public string _disp_name_de_at_menu { get { return ((BinaryObjectStringRecord)data["_disp_name_de_at_menu"]).Value; } set { ((BinaryObjectStringRecord)data["_disp_name_de_at_menu"]).Value = value; } }
+        public string _disp_name_es_at_menu { get { return ((BinaryObjectStringRecord)data["_disp_name_es_at_menu"]).Value; } set { ((BinaryObjectStringRecord)data["_disp_name_es_at_menu"]).Value = value; } }
+        public string _disp_name_cn_traditional { get { return ((BinaryObjectStringRecord)data["_disp_name_cn_traditional"]).Value; } set { ((BinaryObjectStringRecord)data["_disp_name_cn_traditional"]).Value = value; } }
+        public string _disp_name_cn_Simplified { get { return ((BinaryObjectStringRecord)data["_disp_name_cn_Simplified"]).Value; } set { ((BinaryObjectStringRecord)data["_disp_name_cn_Simplified"]).Value = value; } }
+        public string _disp_name_kr { get { return ((BinaryObjectStringRecord)data["_disp_name_kr"]).Value; } set { ((BinaryObjectStringRecord)data["_disp_name_kr"]).Value = value; } }
+    }
+    public class SavePointData
+    {
+        readonly BinaryObject data;
+        public SavePointData(BinaryObject bo)
+        {
+            this.data = bo;
+        }
+        public Int32 _save_point_id { get { return (Int32)data["_save_point_id"]; } set { data["_save_point_id"] = value; } }
+        public Int32 _area_id { get { return (Int32)data["_area_id"]; } set { data["_area_id"] = value; } }
+        public Int32 _floor_id { get { return (Int32)data["_floor_id"]; } set { data["_floor_id"] = value; } }
+        public string _floor_name { get { return ((BinaryObjectStringRecord)data["_floor_name"]).Value; } set { ((BinaryObjectStringRecord)data["_floor_name"]).Value = value; } }
+        public Int32 _save_place { get { return (Int32)data["_save_place"]; } set { data["_save_place"] = value; } }
+        public Int32 _appear_flag_1 { get { return (Int32)data["_appear_flag_1"]; } set { data["_appear_flag_1"] = value; } }
+        public Boolean _appear_flag_param_1 { get { return (Boolean)data["_appear_flag_param_1"]; } set { data["_appear_flag_param_1"] = value; } }
+        public Int32 _appear_flag_2 { get { return (Int32)data["_appear_flag_2"]; } set { data["_appear_flag_2"] = value; } }
+        public Boolean _appear_flag_param_2 { get { return (Boolean)data["_appear_flag_param_2"]; } set { data["_appear_flag_param_2"] = value; } }
+    }
+    public class WineRiverData
+    {
+        readonly BinaryObject data;
+        public WineRiverData(BinaryObject bo)
+        {
+            this.data = bo;
+        }
+        public Int32 _id { get { return (Int32)data["_id"]; } set { data["_id"] = value; } }
+        public Int32 _group_id { get { return (Int32)data["_group_id"]; } set { data["_group_id"] = value; } }
+        public Int32 _kind { get { return (Int32)data["_kind"]; } set { data["_kind"] = value; } }
+        public Int32 _replace_id { get { return (Int32)data["_replace_id"]; } set { data["_replace_id"] = value; } }
+        public Single[] _pos { get { return (Single[])data["_pos"]; } set { data["_pos"] = value; } }
+        public Int32 _wait { get { return (Int32)data["_wait"]; } set { data["_wait"] = value; } }
+    }
+    public class CharaListData
+    {
+        readonly BinaryObject data;
+        public CharaListData(BinaryObject bo)
+        {
+            this.data = bo;
+        }
+        public Int32 _chara_id { get { return (Int32)data["_chara_id"]; } set { data["_chara_id"] = value; } }
+        public Single _window_pos_x { get { return (Single)data["_window_pos_x"]; } set { data["_window_pos_x"] = value; } }
+        public Single _window_pos_y { get { return (Single)data["_window_pos_y"]; } set { data["_window_pos_y"] = value; } }
+        public string _cg_number { get { return ((BinaryObjectStringRecord)data["_cg_number"]).Value; } set { ((BinaryObjectStringRecord)data["_cg_number"]).Value = value; } }
+        public Single _map_scale { get { return (Single)data["_map_scale"]; } set { data["_map_scale"] = value; } }
+        public Single _battle_scale { get { return (Single)data["_battle_scale"]; } set { data["_battle_scale"] = value; } }
+    }
+
+    public class EffectListData
+    {
+        readonly BinaryObject data;
+        public EffectListData(BinaryObject bo)
+        {
+            this.data = bo;
+        }
+        public Int32 _effect_id { get { return (Int32)data["_effect_id"]; } set { data["_effect_id"] = value; } }
+        public string _effect_type { get { return ((BinaryObjectStringRecord)data["_effect_type"]).Value; } set { ((BinaryObjectStringRecord)data["_effect_type"]).Value = value; } }
+        public string _effect_name { get { return ((BinaryObjectStringRecord)data["_effect_name"]).Value; } set { ((BinaryObjectStringRecord)data["_effect_name"]).Value = value; } }
+        public string _file_name { get { return ((BinaryObjectStringRecord)data["_file_name"]).Value; } set { ((BinaryObjectStringRecord)data["_file_name"]).Value = value; } }
+        public Single _cull_x { get { return (Single)data["_cull_x"]; } set { data["_cull_x"] = value; } }
+        public Single _cull_y { get { return (Single)data["_cull_y"]; } set { data["_cull_y"] = value; } }
+        public Single _cull_z { get { return (Single)data["_cull_z"]; } set { data["_cull_z"] = value; } }
+        public Single _cull_offset_x { get { return (Single)data["_cull_offset_x"]; } set { data["_cull_offset_x"] = value; } }
+        public Single _cull_offset_y { get { return (Single)data["_cull_offset_y"]; } set { data["_cull_offset_y"] = value; } }
+        public Single _cull_offset_z { get { return (Single)data["_cull_offset_z"]; } set { data["_cull_offset_z"] = value; } }
+    }
+    public class InnData
+    {
+        readonly BinaryObject data;
+        public InnData(BinaryObject bo)
+        {
+            this.data = bo;
+        }
+        public Int32 _inn_id { get { return (Int32)data["_inn_id"]; } set { data["_inn_id"] = value; } }
+        public Int32 _area_id { get { return (Int32)data["_area_id"]; } set { data["_area_id"] = value; } }
+        public Int32 _price { get { return (Int32)data["_price"]; } set { data["_price"] = value; } }
+    }
 
 #pragma warning restore IDE1006 // Naming Styles
 

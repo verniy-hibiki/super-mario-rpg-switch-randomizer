@@ -35,10 +35,10 @@ namespace Randomizer
                 Reader?.WriteStream(stream_o);
             }
         }
-        public IEnumerable<T> Wrap<T>()
+        public List<T> Wrap<T>()
         {
             var ctor = typeof(T).GetConstructors()[0];
-            return WorkSet.Select(x => (T)ctor.Invoke(new object[] { x }));
+            return WorkSet.Select(x => (T)ctor.Invoke(new object[] { x })).ToList();
         }
 
     }

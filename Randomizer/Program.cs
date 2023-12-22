@@ -140,9 +140,9 @@ namespace Randomizer
             if (!modules[MODULES.SHORT_TEXT]) return;
             if (language == null)
             {
-                ShortenLanguage("lang/message_eng");
+                //ShortenLanguage("lang/message_eng");
                 ShortenLanguage("lang/message_eng_us");
-                ShortenLanguage("lang/message_esp");
+                //ShortenLanguage("lang/message_esp");
                 return;
             }
             var file = RequestFile(language);
@@ -156,7 +156,18 @@ namespace Randomizer
             {
                 if (IsReplaceable(charac.m_text))
                     charac.m_text = "Tak";
-                File.AppendAllLines("tr.txt", new string[] { charac.m_text + " |||||" });
+                else //if (charac.m_text.Contains("party") || charac.m_text.Contains("joined"))
+                {
+                    var parsed = String.Join("", charac.m_text.Select(x =>
+                    {
+                        if (IsReplaceable(x + ""))
+                            return x + "";
+                        else
+                            return "\\u" + ((int)x).ToString("X4");
+                    }));
+                    Console.WriteLine(parsed);
+                    File.AppendAllLines("tr.txt", new string[] { parsed + " |||||" });
+                }
             }
         }
         public static void RandomizeEncounter()
@@ -252,6 +263,20 @@ namespace Randomizer
                 }
             }
         }
+        public static void RandomizeWineRiver()
+        {
+            //var file = RequestFile("wine_river");
+            //var result = file.Wrap<WineRiverData>();
+
+            //var x = result.Select(x => x._kind).Distinct();
+
+            //var groups = result.GroupBy(x => x._kind).Select(x => new { key = x.Key, count= x.Count() });
+
+            //foreach (var item in result)
+            //{
+            //    item._kind = 2;
+            //}
+        }
         public static void RandomizeCharacterInitialStats()
         {
             var file = RequestFile("player_initialize");
@@ -262,6 +287,9 @@ namespace Randomizer
                 Console.WriteLine("Randomizing players initial stats");
                 foreach (var item in result)
                 {
+                    var character = new PlayerInitializeData(item);
+                    //if (character._chara_id == 4) character._chara_id = 1;
+                    //if (character._chara_id == 1) character._chara_id = 4;
                     var stats = new string[] { "_hp","_attack",
                         "_defence","_magic_attack","_magic_defence","_speeed"
                     };
@@ -294,6 +322,17 @@ namespace Randomizer
                         all_skills[(int)item["_chara_id"]].AddRange(new_skiils);
                     }
                 }
+
+                //var item1 = result[1];
+                //var item2 = result[2];
+                //var item3 = result[3];
+                //var item4 = result[4];
+                //var item5 = result[5];
+                //result[1] = item4;
+                //result[2] = item5;
+                //result[3] = item1;
+                //result[4] = item2;
+                //result[5] = item3;
             }
 
         }
@@ -498,22 +537,30 @@ namespace Randomizer
         public static void RandomizeUnlocks()
         {
             var file = RequestFile("event_status");
-            var result = file.WorkSet;
-            var unlocks = result.Where(x => (int)x["_party_num"] > 0).Distinct().ToArray();
+            var result = file.Wrap<EventStatusData>();
+            var unlocks = result.Where(x => (int)x._party_num > 0).Distinct().ToArray();
             foreach (var item in result)
             {
                 //_bounus_hp
-                var bonus_hp = (bool[])item["_bounus_hp"];
+                var bonus_hp = (bool[])item._bounus_hp;
                 for (var i = 0; i < bonus_hp.Length; i++) bonus_hp[i] = true;
-                var bonus_pow = (bool[])item["_bounus_pow"];
+                var bonus_pow = (bool[])item._bounus_pow;
                 for (var i = 0; i < bonus_pow.Length; i++) bonus_pow[i] = true;
-                var bonus_s = (bool[])item["_bounus_s"];
+                var bonus_s = (bool[])item._bounus_s;
                 for (var i = 0; i < bonus_s.Length; i++) bonus_s[i] = true;
 
                 //_coin
                 //_frog_coin
-                item["_coin"] = r.Next(1, 50);
-                item["_frog_coin"] = r.Next(1, 50);
+                item._coin = r.Next(1, 50);
+                item._frog_coin = r.Next(1, 50);
+
+                Console.WriteLine(item._event_id + ":" + item._event_status + ":" + item._party_num + ":" + String.Join(",", item._chara_id));
+                item._party_num = 5;
+                item._chara_id[0] = 1;
+                item._chara_id[1] = 2;
+                item._chara_id[2] = 3;
+                item._chara_id[3] = 4;
+                item._chara_id[4] = 5;
             }
         }
         public static void RandomizeTreasure()
@@ -721,7 +768,7 @@ namespace Randomizer
 
             foreach (var monster in monsters)
             {
-                monster._fp = Math.Max(50,monster._fp);
+                monster._fp = Math.Max(50, monster._fp);
             }
             foreach (var monster in monsters_ai)
             {
@@ -734,7 +781,7 @@ namespace Randomizer
                         {
                             if (monster._skill_id[i] > 0)
                             {
-                                var newSkill = ACTIONS.Enemies.OrderBy(x=>r.Next()).First();
+                                var newSkill = ACTIONS.Enemies.OrderBy(x => r.Next()).First();
                                 monster._skill_id[i] = newSkill;
 
                                 var firstSkillForPlayer = motions
@@ -757,9 +804,17 @@ namespace Randomizer
         }
         public static void Test()
         {
-            var file_to_generate = RequestFile("pc_position");
-            var bo = file_to_generate.WorkSet.FirstOrDefault(x => x != null);
-            var clz = CreateWrapper(file_to_generate, bo.TypeName);
+            {
+                var file_to_generate = RequestFile("effect_list");
+                var bo = file_to_generate.WorkSet.FirstOrDefault(x => x != null);
+                var clz = CreateWrapper(file_to_generate, bo.TypeName);
+            }
+            {
+                var file_to_generate = RequestFile("inn");
+                var bo = file_to_generate.WorkSet.FirstOrDefault(x => x != null);
+                var clz = CreateWrapper(file_to_generate, bo.TypeName);
+            }
+
 
             //foreach (var kv in files)
             //{
@@ -843,6 +898,7 @@ namespace Randomizer
             RandomizeShop();
             RandomizeUnlocks();
             RandomizeMonsterAttacks();
+            RandomizeWineRiver();
             CreateMissingAnimations();
 
             //RandomizeCutscenes();
@@ -859,6 +915,7 @@ namespace Randomizer
 
             foreach (var kv in files)
             {
+                Console.WriteLine("Saving "+kv.Key);
                 kv.Value.Save();
             }
 
