@@ -204,7 +204,7 @@ namespace Randomizer
             {
                 foreach(var mons in file.Wrap<MonsterData>())
                 {
-                    mons._exp = (int)Math.Max(1, mons._exp * Random());
+                    mons._exp = r.Next(1, 50);
                 }
             }
             if (modules[MODULES.ENCOUNTER])
