@@ -50,4 +50,8 @@ You can support the creators via their twitch
 | SHOP | Change which items are in shops |
 | CUTSCENES_R | Randomize cutscenes order |
 | CUTSCENES_S | Changes all cutscenes to the shortest one |
-| SHORT_TEXT | Change all character text to 'Tak' to have shorter text *Currently bugs out some part of the game |
+| SHORT_TEXT | Change all character text to 'Tak' to have shorter text  |
+| MONSTER_SKILL | Changes the skill monstaer can use |
+| MONSTER_XP | Changes the amount of XP monster drop |
+| SURPRISE | Rebalance the characters in a surprise way |
+| ZONES | Non working module, changes the room transitions|

@@ -25,6 +25,9 @@ namespace Randomizer
             public static string CUTSCENES_S = "CUTSCENES_S";
             public static string SHORT_TEXT = "SHORT_TEXT";
             public static string MONSTER_SKILL = "MONSTER_SKILL";
+            public static string ZONES = "ZONES";
+            public static string SURPRISE = "SURPRISE";
+            public static string MONSTER_XP = "MONSTER_XP";
         }
         static readonly Dictionary<string, bool> modules = new()
         {
@@ -41,6 +44,9 @@ namespace Randomizer
             { MODULES.CUTSCENES_S, false },
             { MODULES.SHORT_TEXT, false },
             { MODULES.MONSTER_SKILL, false },
+            { MODULES.ZONES, false },
+            { MODULES.SURPRISE, false },
+            { MODULES.MONSTER_XP, false },
         };
         static readonly Dictionary<string, TBLFile> files = new();
         static readonly Random r = new();
@@ -69,6 +75,14 @@ namespace Randomizer
         new List<int>(),
         new List<int>()
        };
+        private static readonly Dictionary<int, double> character_bonus =
+        new Dictionary<int, double>(){
+            { PLAYER.MARIO, 1 },
+            { PLAYER.MALLOW, 2 },
+            { PLAYER.BOWSER, 0.8 },
+            { PLAYER.GENO, 1.5 },
+            { PLAYER.PEACH, 2.5 }
+        };
         public static double Random()
         {
             return r.NextDouble() * danger + danger_offset;
@@ -186,7 +200,13 @@ namespace Randomizer
             //var randomizable_montsters = encounters.Where(item => !non_randomizable_battles.Contains((int)item["_encount_pattern_id"]))
             //                                   .SelectMany(item => (int[])(int[])item["_monster_id"]).Distinct().ToList();
             var randomizable_montsters = monsters.Select(x => (int)x["_character_id"]).Where(x => x < 1500 && x != MONSTER.Dry_Bones).ToList();
-
+            if(modules[MODULES.MONSTER_XP])
+            {
+                foreach(var mons in file.Wrap<MonsterData>())
+                {
+                    mons._exp = (int)Math.Max(1, mons._exp * Random());
+                }
+            }
             if (modules[MODULES.ENCOUNTER])
             {
                 Console.WriteLine("Randomizing encounters");
@@ -213,6 +233,8 @@ namespace Randomizer
                     item["_drop_item_id_1"] = all_items.OrderBy(x => r.Next()).First();
                     item["_drop_item_id_2"] = all_items.OrderBy(x => r.Next()).First();
                     item["_coin"] = r.Next(10, 20);
+
+                    
 
                     /*_monster_id,_character_id,
                      * _hp,_fp,_attack,_defense,_magic_attack,_magic_defense,_speed,_avoid,
@@ -262,6 +284,20 @@ namespace Randomizer
                     }
                 }
             }
+        }
+        public static void RandomizeZones()
+        {
+            if (!modules[MODULES.ZONES]) return;
+            /*var file = RequestFile("map_jump_list");
+            var result = file.Wrap<MapJumpData>();
+            var original = result.Select(x => new MapJumpData(x.data)).ToList();
+            var indexes = result.Select((x, i) => i).OrderBy(x => r.Next()).ToList();
+
+            for (var i = 0; i < result.Count; i++)
+            {
+                result[i].m_dst_exit_id = original[indexes[i]].m_dst_exit_id;
+                result[i].m_dst_map_id = original[indexes[i]].m_dst_map_id;
+            }*/
         }
         public static void RandomizeWineRiver()
         {
@@ -391,7 +427,11 @@ namespace Randomizer
                         if (previous != null)
                         {
                             //Prevent too big of debuff
-                            item[stat] = Math.Max((int)previous[stat] - 10, (int)item[stat]);
+                            item[stat] = Math.Max((int)previous[stat] - 20, (int)item[stat]);
+                        }
+                        if(modules[MODULES.SURPRISE])
+                        {
+                            item[stat] = Math.Max(1, (int)(((int)item[stat])* character_bonus[player_id]));
                         }
                     }
                     if (modules[MODULES.SPECIALS])
@@ -899,6 +939,7 @@ namespace Randomizer
             RandomizeUnlocks();
             RandomizeMonsterAttacks();
             RandomizeWineRiver();
+            RandomizeZones();
             CreateMissingAnimations();
 
             //RandomizeCutscenes();
@@ -915,7 +956,7 @@ namespace Randomizer
 
             foreach (var kv in files)
             {
-                Console.WriteLine("Saving "+kv.Key);
+                Console.WriteLine("Saving " + kv.Key);
                 kv.Value.Save();
             }
 

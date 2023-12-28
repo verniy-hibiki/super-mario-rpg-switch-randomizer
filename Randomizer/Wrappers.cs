@@ -639,7 +639,7 @@ namespace Randomizer
     }
     public class MapJumpData
     {
-        readonly BinaryObject data;
+        public readonly BinaryObject data;
         public MapJumpData(BinaryObject bo)
         {
             this.data = bo;
