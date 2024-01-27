@@ -13,9 +13,11 @@ namespace Randomizer
         static class MODULES
         {
             public static string INITIALIZE = "INITIALIZE";
+            public static string INITIALIZE_ITEMS = "INITIALIZE_ITEMS";
             public static string SPECIALS = "SPECIALS";
             public static string EQUIP = "EQUIP";
             public static string ITEMS = "ITEMS";
+            public static string ITEMS_LIMIT = "ITEMS_LIMIT";
             public static string ITEMS_PRICE = "ITEMS_PRICE";
             public static string TREASURE = "TREASURE";
             public static string LEVELUP = "LEVELUP";
@@ -28,13 +30,16 @@ namespace Randomizer
             public static string ZONES = "ZONES";
             public static string SURPRISE = "SURPRISE";
             public static string MONSTER_XP = "MONSTER_XP";
+            public static string WINE_RIVER = "WINE_RIVER";
         }
         static readonly Dictionary<string, bool> modules = new()
         {
             { MODULES.INITIALIZE, false },
+            { MODULES.INITIALIZE_ITEMS, false },
             { MODULES.SPECIALS, false },
             { MODULES.EQUIP, false },
             { MODULES.ITEMS, false },
+            { MODULES.ITEMS_LIMIT, false },
             { MODULES.ITEMS_PRICE, false },
             { MODULES.TREASURE, false },
             { MODULES.LEVELUP, false },
@@ -47,6 +52,7 @@ namespace Randomizer
             { MODULES.ZONES, false },
             { MODULES.SURPRISE, false },
             { MODULES.MONSTER_XP, false },
+            { MODULES.WINE_RIVER, false },
         };
         static readonly Dictionary<string, TBLFile> files = new();
         static readonly Random r = new();
@@ -154,9 +160,9 @@ namespace Randomizer
             if (!modules[MODULES.SHORT_TEXT]) return;
             if (language == null)
             {
-                //ShortenLanguage("lang/message_eng");
+                ShortenLanguage("lang/message_eng");
                 ShortenLanguage("lang/message_eng_us");
-                //ShortenLanguage("lang/message_esp");
+                ShortenLanguage("lang/message_esp");
                 return;
             }
             var file = RequestFile(language);
@@ -200,9 +206,9 @@ namespace Randomizer
             //var randomizable_montsters = encounters.Where(item => !non_randomizable_battles.Contains((int)item["_encount_pattern_id"]))
             //                                   .SelectMany(item => (int[])(int[])item["_monster_id"]).Distinct().ToList();
             var randomizable_montsters = monsters.Select(x => (int)x["_character_id"]).Where(x => x < 1500 && x != MONSTER.Dry_Bones).ToList();
-            if(modules[MODULES.MONSTER_XP])
+            if (modules[MODULES.MONSTER_XP])
             {
-                foreach(var mons in file.Wrap<MonsterData>())
+                foreach (var mons in file.Wrap<MonsterData>())
                 {
                     mons._exp = r.Next(1, 50);
                 }
@@ -234,7 +240,7 @@ namespace Randomizer
                     item["_drop_item_id_2"] = all_items.OrderBy(x => r.Next()).First();
                     item["_coin"] = r.Next(10, 20);
 
-                    
+
 
                     /*_monster_id,_character_id,
                      * _hp,_fp,_attack,_defense,_magic_attack,_magic_defense,_speed,_avoid,
@@ -301,17 +307,19 @@ namespace Randomizer
         }
         public static void RandomizeWineRiver()
         {
-            //var file = RequestFile("wine_river");
-            //var result = file.Wrap<WineRiverData>();
+            var file = RequestFile("wine_river");
+            var result = file.Wrap<WineRiverData>();
+            if (modules[MODULES.WINE_RIVER])
+            {
+                var x = result.Select(x => x._kind).Distinct();
 
-            //var x = result.Select(x => x._kind).Distinct();
+                var groups = result.GroupBy(x => x._kind).Select(x => new { key = x.Key, count = x.Count() });
 
-            //var groups = result.GroupBy(x => x._kind).Select(x => new { key = x.Key, count= x.Count() });
-
-            //foreach (var item in result)
-            //{
-            //    item._kind = 2;
-            //}
+                foreach (var item in result)
+                {
+                    item._pos[1] *= (float)Random();
+                }
+            }
         }
         public static void RandomizeCharacterInitialStats()
         {
@@ -335,8 +343,11 @@ namespace Randomizer
                     }
                     var skills = (int[])item["_learned_skill_id"];
 
-                    item["_armor"] = (int)(new int[] { 0, 0, 0, ITEM.Lazy_Shell_armor, ITEM.Lovely_Dress }.OrderBy(x => r.Next()).First());
-                    item["_weapon"] = (int)(new int[] { 0, 0, 0, ITEM.Slap_Glove, ITEM.Lucky_Hammer }.OrderBy(x => r.Next()).First());
+                    if (modules[MODULES.INITIALIZE_ITEMS])
+                    {
+                        item["_armor"] = (int)(new int[] { 0, 0, 0, ITEM.Lazy_Shell_armor, ITEM.Lovely_Dress }.OrderBy(x => r.Next()).First());
+                        item["_weapon"] = (int)(new int[] { 0, 0, 0, ITEM.Slap_Glove, ITEM.Lucky_Hammer }.OrderBy(x => r.Next()).First());
+                    }
 
                     if (modules[MODULES.SPECIALS])
                     {
@@ -429,9 +440,9 @@ namespace Randomizer
                             //Prevent too big of debuff
                             item[stat] = Math.Max((int)previous[stat] - 20, (int)item[stat]);
                         }
-                        if(modules[MODULES.SURPRISE])
+                        if (modules[MODULES.SURPRISE])
                         {
-                            item[stat] = Math.Max(1, (int)(((int)item[stat])* character_bonus[player_id]));
+                            item[stat] = Math.Max(1, (int)(((int)item[stat]) * character_bonus[player_id]));
                         }
                     }
                     if (modules[MODULES.SPECIALS])
@@ -518,9 +529,21 @@ namespace Randomizer
                     item._point_buy_price = (int)((int)item._point_buy_price * (Random()));
                     item._point_sell_price = (int)((int)item._point_sell_price * (Random()));
                 }
+
                 if ((int)item._explain_id > 0 && (int)item._buy_price > 0)
                 {
                     shop_items.Add((int)item._item_id);
+                    if (modules[MODULES.SHOP])
+                    {
+                        item._sell_price = Math.Max(item._sell_price, 1);
+                        item._buy_price = Math.Max(item._sell_price, 1);
+                        item._buy_price_alto = Math.Max(item._sell_price, 1);
+                        item._buy_price_tenor = Math.Max(item._sell_price, 1);
+                        item._buy_price_soprano = Math.Max(item._sell_price, 1);
+                        item._kaeru_coin_price = Math.Max(item._sell_price, 1);
+                        item._point_buy_price = Math.Max(item._sell_price, 1);
+                        item._point_sell_price = Math.Max(item._sell_price, 1);
+                    }
                 }
                 if (modules[MODULES.ITEMS])
                 {
@@ -531,8 +554,11 @@ namespace Randomizer
 
                     }
 
-                    item._possession_limit_easy = 100;// Math.Max(2, (int)((int)item["_possession_limit_easy"] * (Random())));
-                    item._possession_limit_normal = 100;// Math.Max(2, (int)((int)item["_possession_limit_normal"] * (Random())));
+                }
+                if (modules[MODULES.ITEMS_LIMIT])
+                {
+                    item._possession_limit_easy = 999;// Math.Max(2, (int)((int)item["_possession_limit_easy"] * (Random())));
+                    item._possession_limit_normal = 99;// Math.Max(2, (int)((int)item["_possession_limit_normal"] * (Random())));
                 }
                 if ((bool)item._can_equip_mario)
                     all_equipable[1].Add((int)item._item_id);
@@ -557,15 +583,19 @@ namespace Randomizer
                 return;
             }
             var file = RequestFile(shop);
-            var result = file.WorkSet;
+            var result = file.Wrap<ShopData>();
             if (modules[MODULES.SHOP])
             {
-                Console.WriteLine("Randomizing shops");
+                Console.WriteLine("Randomizing " + shop);
             }
 
             foreach (var item in result)
             {
-                int[] items_for_sale = (int[])item["_item_id"];
+                //Find name
+                var name = RequestFile("lang/menu_text_eng_us").Wrap<MenuTextData>().Where(x => x.m_file_id == "place_name").SelectMany(x => x.m_data).FirstOrDefault(x => x != null && x.m_id == item._shop_name_id)?.m_text ?? "<Cannot find name>";
+                Console.WriteLine("Shop " + item._shop_id + " = " + name);
+                if (shop == "shop" && item._shop_id == 10) continue;//Fix seaside shop broken
+                int[] items_for_sale = (int[])item._item_id;
                 for (int i = 0; i < items_for_sale.Length; i++)
                 {
                     items_for_sale[i] = shop_items.OrderBy(x => r.Next()).First();
