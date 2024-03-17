@@ -34,7 +34,7 @@ We added writer support in their code.
 # Support
 
 You can support the creators via their twitch
-[Takstijn](https://twitch.tv/takstijn) [ObsidianMaker](https://twitch.tv/ObsidianMaker)
+[Takstijn](https://twitch.tv/takstijn) 
 
 # Modules
 | Module | Description |
