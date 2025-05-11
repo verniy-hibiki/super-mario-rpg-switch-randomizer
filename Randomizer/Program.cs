@@ -1,6 +1,3 @@
-﻿// See https://aka.ms/new-console-template for more information
-
-
 using System.Reflection;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
@@ -14,6 +11,8 @@ namespace Randomizer
         {
             public static string INITIALIZE = "INITIALIZE";
             public static string INITIALIZE_ITEMS = "INITIALIZE_ITEMS";
+            public static string PARTY_ORDER = "PARTY_ORDER";
+            public static string INITIAL_PARTY = "INITIAL_PARTY";
             public static string SPECIALS = "SPECIALS";
             public static string EQUIP = "EQUIP";
             public static string ITEMS = "ITEMS";
@@ -36,6 +35,8 @@ namespace Randomizer
         {
             { MODULES.INITIALIZE, false },
             { MODULES.INITIALIZE_ITEMS, false },
+            { MODULES.PARTY_ORDER, false },
+            { MODULES.INITIAL_PARTY, false },
             { MODULES.SPECIALS, false },
             { MODULES.EQUIP, false },
             { MODULES.ITEMS, false },
@@ -424,27 +425,39 @@ namespace Randomizer
             var result = file.WorkSet;
             if (modules[MODULES.LEVELUP])
             {
-                BinaryObject? previous = null;
                 Console.WriteLine("Randomizing players level up for " + character);
+                
+                // Apply random multiplier only once at the start
+                var baseMultiplier = Random();
+                if (modules[MODULES.SURPRISE])
+                {
+                    baseMultiplier *= character_bonus[player_id];
+                }
+
+                BinaryObject? previous = null;
                 foreach (var item in result.Skip(1))
                 {
                     var stats = new string[] { "_hp", "_hp_bonus", "_attack", "_attack_bonus",
                         "_magic_attack","_magic_attack_bonus","_defence",
                         "_defence_bonus","_magic_defence","_magic_defence_bonus"
                     };
+                    
                     foreach (var stat in stats)
                     {
-                        item[stat] = (int)((int)item[stat] * (Random()));
+                        // Apply the base multiplier to the original stat value
+                        var originalStat = (int)item[stat];
+                        var randomizedStat = Math.Max(1, (int)(originalStat * baseMultiplier));
+                        
                         if (previous != null)
                         {
-                            //Prevent too big of debuff
-                            item[stat] = Math.Max((int)previous[stat] - 20, (int)item[stat]);
+                            // Ensure stats don't decrease from previous level
+                            var prevStat = (int)previous[stat];
+                            randomizedStat = Math.Max(prevStat, randomizedStat);
                         }
-                        if (modules[MODULES.SURPRISE])
-                        {
-                            item[stat] = Math.Max(1, (int)(((int)item[stat]) * character_bonus[player_id]));
-                        }
+                        
+                        item[stat] = randomizedStat;
                     }
+
                     if (modules[MODULES.SPECIALS])
                     {
                         if ((int)item["_learn_skill"] > 0)
@@ -457,8 +470,6 @@ namespace Randomizer
                     previous = item;
                 }
             }
-
-
         }
         public static void ReadCharacterLevelUp(string character, List<int> learnableSkill)
         {
@@ -609,6 +620,14 @@ namespace Randomizer
             var file = RequestFile("event_status");
             var result = file.Wrap<EventStatusData>();
             var unlocks = result.Where(x => (int)x._party_num > 0).Distinct().ToArray();
+            
+            // Create a list of all party members and shuffle them if PARTY_ORDER is enabled
+            var partyMembers = new List<int> { 1, 2, 3, 4, 5 };
+            if (modules[MODULES.PARTY_ORDER])
+            {
+                partyMembers = partyMembers.OrderBy(x => r.Next()).ToList();
+            }
+            
             foreach (var item in result)
             {
                 //_bounus_hp
@@ -625,12 +644,15 @@ namespace Randomizer
                 item._frog_coin = r.Next(1, 50);
 
                 Console.WriteLine(item._event_id + ":" + item._event_status + ":" + item._party_num + ":" + String.Join(",", item._chara_id));
+                
+                // Set party size to 5
                 item._party_num = 5;
-                item._chara_id[0] = 1;
-                item._chara_id[1] = 2;
-                item._chara_id[2] = 3;
-                item._chara_id[3] = 4;
-                item._chara_id[4] = 5;
+                
+                // Assign party members in random order if PARTY_ORDER is enabled, otherwise use default order
+                for (var i = 0; i < 5; i++)
+                {
+                    item._chara_id[i] = partyMembers[i];
+                }
             }
         }
         public static void RandomizeTreasure()
@@ -950,47 +972,102 @@ namespace Randomizer
         }
         public static void Main(string[] args)
         {
-            ReadConfig(args);
-            if (!System.IO.Directory.Exists(base_path))
+            // Create log file in the executable's directory
+            string exePath = System.Reflection.Assembly.GetExecutingAssembly().Location;
+            string? exeDir = Path.GetDirectoryName(exePath);
+            string logPath = Path.Combine(exeDir ?? Environment.CurrentDirectory, "randomizer_log.txt");
+            
+            try
             {
-                Console.WriteLine("Put the dumped romfs in the same folder as the .exe file");
-                return;
+                File.WriteAllText(logPath, $"Starting randomizer at {DateTime.Now}\n");
+                File.AppendAllText(logPath, $"Executable path: {exePath}\n");
+                File.AppendAllText(logPath, $"Working directory: {Environment.CurrentDirectory}\n");
+                
+                // Check if romfs exists
+                string romfsPath = Path.Combine(Environment.CurrentDirectory, "romfs");
+                File.AppendAllText(logPath, $"Checking for romfs at: {romfsPath}\n");
+                
+                if (!Directory.Exists(romfsPath))
+                {
+                    string msg = $"Error: romfs directory not found at {romfsPath}";
+                    File.AppendAllText(logPath, msg + "\n");
+                    Console.WriteLine(msg);
+                    Console.WriteLine("Press any key to exit...");
+                    Console.ReadKey();
+                    return;
+                }
+                
+                File.AppendAllText(logPath, "romfs directory found\n");
+                
+                // Continue with existing code...
+                ReadConfig(args);
+                File.AppendAllText(logPath, "Config read complete\n");
+                
+                if (!System.IO.Directory.Exists(base_path))
+                {
+                    var msg = "Put the dumped romfs in the same folder as the .exe file";
+                    File.AppendAllText(logPath, msg + "\n");
+                    Console.WriteLine(msg);
+                    Console.WriteLine("Press any key to exit...");
+                    Console.ReadKey();
+                    return;
+                }
+                
+                File.AppendAllText(logPath, "Creating directories...\n");
+                System.IO.Directory.CreateDirectory(dest_path);
+                System.IO.Directory.CreateDirectory(dest_path + "\\lang");
+                System.IO.Directory.CreateDirectory(dest_path + "\\..\\movies\\");
+
+                File.AppendAllText(logPath, "Starting randomization...\n");
+                RandomizeItems();
+                File.AppendAllText(logPath, "Items randomized\n");
+                RandomizeCharacterInitialStats();
+                File.AppendAllText(logPath, "Initial stats randomized\n");
+                RandomizeTreasure();
+                File.AppendAllText(logPath, "Treasure randomized\n");
+                RandomizeCharacterLevelUp();
+                File.AppendAllText(logPath, "Level up randomized\n");
+                RandomizeEncounter();
+                File.AppendAllText(logPath, "Encounters randomized\n");
+                RandomizeShop();
+                File.AppendAllText(logPath, "Shops randomized\n");
+                RandomizeUnlocks();
+                File.AppendAllText(logPath, "Unlocks randomized\n");
+                RandomizeMonsterAttacks();
+                File.AppendAllText(logPath, "Monster attacks randomized\n");
+                RandomizeWineRiver();
+                File.AppendAllText(logPath, "Wine river randomized\n");
+                RandomizeZones();
+                File.AppendAllText(logPath, "Zones randomized\n");
+                CreateMissingAnimations();
+                File.AppendAllText(logPath, "Animations created\n");
+
+                ShortenLanguage();
+                File.AppendAllText(logPath, "Language shortened\n");
+                Watermark();
+                File.AppendAllText(logPath, "Watermark added\n");
+
+                Test();
+                File.AppendAllText(logPath, "Test completed\n");
+
+                foreach (var kv in files)
+                {
+                    File.AppendAllText(logPath, "Saving " + kv.Key + "\n");
+                    Console.WriteLine("Saving " + kv.Key);
+                    kv.Value.Save();
+                }
+                
+                File.AppendAllText(logPath, "Randomization complete!\n");
             }
-            System.IO.Directory.CreateDirectory(dest_path);
-            System.IO.Directory.CreateDirectory(dest_path + "\\lang");
-            System.IO.Directory.CreateDirectory(dest_path + "\\..\\movies\\");
-
-            RandomizeItems();
-            RandomizeCharacterInitialStats();
-            RandomizeTreasure();
-            RandomizeCharacterLevelUp();
-            RandomizeEncounter();
-            RandomizeShop();
-            RandomizeUnlocks();
-            RandomizeMonsterAttacks();
-            RandomizeWineRiver();
-            RandomizeZones();
-            CreateMissingAnimations();
-
-            //RandomizeCutscenes();
-
-            ShortenLanguage();
-            Watermark();
-
-            //player_action
-            //encounter
-            //shop
-            //level_up
-
-            Test();
-
-            foreach (var kv in files)
+            catch (Exception ex)
             {
-                Console.WriteLine("Saving " + kv.Key);
-                kv.Value.Save();
+                var errorMsg = "An error occurred:\n" + ex.ToString();
+                File.AppendAllText(logPath, errorMsg + "\n");
+                Console.WriteLine(errorMsg);
             }
 
-
+            Console.WriteLine("\nPress any key to exit...");
+            Console.ReadKey();
         }
 
         public static string CreateWrapper(TBLFile file, string typeName)
