@@ -52,4 +52,4 @@ You can support the creators via twitch here:
 | ZONES | Non working module, changes the room transitions|  
 
   # Contact
-  You can contact me on discord at discord.gg/hibiki or on bluesky at https://verniy.bsky.social/
+  You can contact me on discord at https://discord.gg/hibiki or on bluesky at https://verniy.bsky.social/
