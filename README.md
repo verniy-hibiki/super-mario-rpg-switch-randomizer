@@ -26,11 +26,6 @@ Copy the romfs in the output directory to your emulator or modded switch.
 
 Coming soon
 
-# Thanks
-
-Thanks github.com/bbowyersmyth/BinaryFormatDataStructure for the MS-NRBF reader.
-We added writer support in their code.
-
 # Support
 
 You can support the creators via their twitch
@@ -50,7 +45,7 @@ You can support the creators via their twitch
 | SHOP | Change which items are in shops |
 | CUTSCENES_R | Randomize cutscenes order |
 | CUTSCENES_S | Changes all cutscenes to the shortest one |
-| SHORT_TEXT | Change all character text to 'Tak' to have shorter text  |
+| SHORT_TEXT | Change all character text to 'Bep' to have shorter text  |
 | MONSTER_SKILL | Changes the skill monstaer can use |
 | MONSTER_XP | Changes the amount of XP monster drop |
 | SURPRISE | Rebalance the characters in a surprise way |
