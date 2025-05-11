@@ -9,7 +9,7 @@ Randomizer for the Super Mario RPG on switch
 Download from the GitHub repository <a href="https://github.com/verniy-hibiki/super-mario-rpg-switch-randomizer" target="_blank">here</a>.
 
 #### Step 2: Extract Assets  
-The randomizer requires some assets from the game's RomFS to work. Contact me on discord at discord.gg/hibiki if you need assistance with this step.  
+The randomizer requires some assets from the game's RomFS to work, you need to extract the files yourself.   
 The root folder is the folder that contains the randomizer.exe  
 Put the dumped romfs next to the randomizer.exe file  
 
@@ -49,4 +49,7 @@ You can support the creators via twitch here:
 | MONSTER_SKILL | Changes the skill monstaer can use |
 | MONSTER_XP | Changes the amount of XP monster drop |
 | SURPRISE | Rebalance the characters in a surprise way |
-| ZONES | Non working module, changes the room transitions|
+| ZONES | Non working module, changes the room transitions|  
+
+  # Contact
+  You can contact me on discord at discord.gg/hibiki or on bluesky at https://verniy.bsky.social/
