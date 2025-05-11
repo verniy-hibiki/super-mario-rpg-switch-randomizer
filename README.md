@@ -34,7 +34,7 @@ We added writer support in their code.
 # Support
 
 You can support the creators via their twitch
-[Takstijn](https://twitch.tv/takstijn) 
+[Verniy](https://twitch.tv/Verniy) 
 
 # Modules
 | Module | Description |
