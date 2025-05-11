@@ -6,7 +6,7 @@ Randomizer for the Super Mario RPG on switch
 How To Install
 
 Step 1: Download
-Download from the GitHub repository <a href="https://github.com/verniy-hibiki/super-mario-rpg-switch-randomizer"(https://github.com/verniy-hibiki/super-mario-rpg-switch-randomizer)" target="_blank">here</a>. Could also download precompiled exe in the Release section
+Download from the GitHub repository <a href="https://github.com/verniy-hibiki/super-mario-rpg-switch-randomizer" target="_blank">here</a>. Could also download precompiled exe in the Release section
 
 Step 2: Extract Assets
 The randomizer requires some assets from the game's RomFS to work. 
