@@ -48,7 +48,6 @@ https://www.twitch.tv/verniy
 | SHORT_TEXT | Change all character text to 'Bep' to have shorter text  |
 | MONSTER_SKILL | Changes the skill monstaer can use |
 | MONSTER_XP | Changes the amount of XP monster drop |
-| SURPRISE | Rebalance the characters in a surprise way |
 | ZONES | Non working module, changes the room transitions|  
 
   # Contact
