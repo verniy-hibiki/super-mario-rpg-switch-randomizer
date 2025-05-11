@@ -134,11 +134,11 @@ namespace Randomizer
                     {
                         if ((item.m_id == 2706) && menu.m_file_id == "040_command_menu")
                         {
-                            item.m_text = "Randomized Mario RPG by takstijn and friends";
+                            item.m_text = "Randomized Mario RPG by Verniy";
                         }
                         if ((item.m_id == 2707) && menu.m_file_id == "040_command_menu")
                         {
-                            item.m_text = "Randomized Mario RPG by takstijn and friends";
+                            item.m_text = "Randomized Mario RPG by Verniy";
                         }
                         if ((item.m_id == 2715) && menu.m_file_id == "040_command_menu")
                         {
@@ -175,7 +175,7 @@ namespace Randomizer
             foreach (var charac in file.Wrap<MessageData>())
             {
                 if (IsReplaceable(charac.m_text))
-                    charac.m_text = "Tak";
+                    charac.m_text = "Bep";
                 else //if (charac.m_text.Contains("party") || charac.m_text.Contains("joined"))
                 {
                     var parsed = String.Join("", charac.m_text.Select(x =>
