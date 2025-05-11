@@ -28,7 +28,7 @@ Coming soon
 
 # Support
 
-You can support the creators via twitch here:  
+You can support the creator via twitch here:  
 https://www.twitch.tv/verniy  
 
 # Modules
