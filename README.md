@@ -1,4 +1,4 @@
-# super-mario-rpg-switch-randomizer
+# Super Mario RPG (Switch) Randomizer
 Randomizer for the Super Mario RPG on switch
 
 # Getting started
