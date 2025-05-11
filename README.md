@@ -3,23 +3,23 @@ Randomizer for the Super Mario RPG on switch
 
 # Getting started
 
-How To Install
+## How To Install
 
-Step 1: Download  
+### Step 1: Download  
 Download from the GitHub repository <a href="https://github.com/verniy-hibiki/super-mario-rpg-switch-randomizer" target="_blank">here</a>.
 
-Step 2: Extract Assets  
+### Step 2: Extract Assets  
 The randomizer requires some assets from the game's RomFS to work. 
 The root folder is the folder that contains the randomizer.exe
 Put the dumped romfs next to the randomizer.exe file
 
-Step 3: Done!  
+### Step 3: Done!  
 You should now be able to start randomizing if there are no errors in the randomizer app
 
-Step 4:  
+### Step 4:  
 Run Randomizer.exe 
 
-Step 5:  
+### Step 5:  
 Copy the romfs in the output directory to your emulator or modded switch.
 
 # Video
