@@ -45,7 +45,7 @@ https://www.twitch.tv/verniy
 | SHOP | Change which items are in shops |
 | CUTSCENES_R | Randomize cutscenes order |
 | CUTSCENES_S | Changes all cutscenes to the shortest one |
-| SHORT_TEXT | Change all character text to 'Bep' to have shorter text  |
+| SHORT_TEXT | Change all character text to 'Bep' to have shorter text (this breaks the Topper quizzes currently)  |
 | MONSTER_SKILL | Changes the skill monstaer can use |
 | MONSTER_XP | Changes the amount of XP monster drop |
 | ZONES | Non working module, changes the room transitions|  
